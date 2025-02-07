@@ -34,3 +34,4 @@ static/assets/.temp
 !/.pytest_cache/
 .env
 pytest_cache/
+**/.terraform/**

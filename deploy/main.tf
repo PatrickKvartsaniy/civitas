@@ -1,34 +1,22 @@
-provider "aws" {
-  region = "us-east-1"
+## Create ECR repository
+resource "aws_ecr_repository" "repository" {
+  for_each = toset(var.repository_list)
+  name = each.key
 }
 
-resource "aws_lambda_function" "nova_etm" {
-  function_name = "my_container_lambda"
-  role          = aws_iam_role.lambda_role.arn
-  package_type  = "Image"
-  image_uri     = "<AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/my-lambda-container:latest"
-  timeout       = 10
-  memory_size   = 256
+# Build Docker images
+resource "docker_image" "civitas" {
+  for_each = toset(var.repository_list)
+  name     = "${aws_ecr_repository.repository[each.key].repository_url}:latest"
+
+  build {
+    context    = "."
+    dockerfile = "${each.key}.Dockerfile"
+  }
 }
 
-resource "aws_iam_role" "lambda_role" {
-  name = "lambda_execution_role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "lambda.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "lambda_policy" {
-  role       = aws_iam_role.lambda_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+# Push images to ECR
+resource "docker_registry_image" "civitas" {
+  for_each = toset(var.repository_list)
+  name     = docker_image.civitas[each.key].name
 }
