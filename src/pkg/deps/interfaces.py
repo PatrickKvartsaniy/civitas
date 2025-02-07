@@ -7,14 +7,6 @@ from src.pkg.models.models import Amenity, Building
 
 class RepositoryInterface(ABC):
     @abstractmethod
-    async def extract_amenities(self) -> List[Amenity]:
-        raise NotImplementedError
-
-    @abstractmethod
-    async def extract_buildings(self) -> List[Building]:
-        raise NotImplementedError
-
-    @abstractmethod
     async def load_amenities(self, amenities: List[Amenity]):
         raise NotImplementedError
 

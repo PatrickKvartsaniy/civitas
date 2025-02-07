@@ -3,23 +3,15 @@ from typing import List
 
 from src.pkg.deps.interfaces import RepositoryInterface
 from src.pkg.models.models import Amenity, Building
-from src.pkg.repository.overpass.client import Client
 from src.pkg.repository.persistence.queries import PersistenceRepository
 
 logger = logging.getLogger(__name__)
 
 
 class Repository(RepositoryInterface):
-    def __init__(self, bounding_box, db):
+    def __init__(self, db):
         super().__init__()
         self._persistence_repo = PersistenceRepository(db)
-        self._osm_client = Client(bounding_box)
-
-    async def extract_amenities(self) -> List[Amenity]:
-        return await self._osm_client.extract_amenities()
-
-    async def extract_buildings(self) -> List[Building]:
-        return await self._osm_client.extract_buildings()
 
     async def get_amenities(self) -> List[Amenity]:
         return await self._persistence_repo.get_amenities()

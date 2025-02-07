@@ -1,7 +1,6 @@
 from typing import List
 
 import overpy
-import asyncio
 
 from shapely.geometry.point import Point
 from shapely.geometry.polygon import Polygon
@@ -11,22 +10,13 @@ from src.pkg.models.models import Amenity, Building
 
 
 class Client:
-    def __init__(self, bounding_box):
+    def __init__(self):
         """
         Initialize the Overpass API Wrapper.
-
-        :param bounding_box: A tuple representing the bounding box as (south, west, north, east).
         """
         self.api = overpy.Overpass()
-        if isinstance(bounding_box, tuple) and len(bounding_box) == 4:
-            # Convert tuple to string in Overpass API format
-            self.bounding_box = f"{bounding_box[0]},{bounding_box[1]},{bounding_box[2]},{bounding_box[3]}"
-        else:
-            raise ValueError(
-                "Bounding box must be a tuple with four coordinates: (south, west, north, east)."
-            )
 
-    async def extract_buildings(self) -> List[Building]:
+    async def extract_buildings(self, bounding_box: tuple) -> List[Building]:
         """
         Fetch all buildings and their metadata within the bounding box.
 
@@ -34,7 +24,7 @@ class Client:
         """
         query = f"""
         [out:json];
-        way["building"]({self.bounding_box});
+        way["building"]({bounding_box});
         (._;>;);
         out body;
         """
@@ -53,7 +43,7 @@ class Client:
             buildings.append(building)
         return buildings
 
-    async def extract_amenities(self) -> List[Amenity]:
+    async def extract_amenities(self, bounding_box: tuple) -> List[Amenity]:
         """
         Fetch all amenities (restaurants, cafés, banks, pharmacies, shops, and offices) within the bounding box.
 
@@ -62,9 +52,9 @@ class Client:
         query = f"""
         [out:json];
         (
-          node["amenity"~"restaurant|cafe|bank|pharmacy"]({self.bounding_box});
-          node["shop"]({self.bounding_box});
-          node["office"]({self.bounding_box});
+          node["amenity"~"restaurant|cafe|bank|pharmacy"]({bounding_box});
+          node["shop"]({bounding_box});
+          node["office"]({bounding_box});
         );
         out body;
         """
@@ -87,23 +77,3 @@ class Client:
             amenities.append(amenity)
 
         return amenities
-
-
-if __name__ == "__main__":
-    # Define the bounding box for Malta as a tuple
-    MALTA_BOUNDING_BOX = (34.9500, 14.1800, 36.0800, 14.6000)
-
-    # Create an instance of the OverpassAPIWrapper
-    overpass_api = Client(MALTA_BOUNDING_BOX)
-
-    # Fetch and print amenities
-    async def main():
-        print("Fetching buildings...")
-        try:
-            buildings = await overpass_api.get_buildings()
-            for building in buildings:
-                print(building)
-        except overpy.exception.OverpassBadRequest as e:
-            print(f"Overpass API Error: {e}")
-
-    asyncio.run(main())

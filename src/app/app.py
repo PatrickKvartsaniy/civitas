@@ -1,17 +1,17 @@
 import uvicorn
 import asyncio
-import signal
 import logging
 from fastapi import FastAPI
 
 from .api import api_router
 from .etl import ETL
 from .events import lifespan
-from src.pkg.config.env import get_settings, Settings
+from src.pkg.config.env import Settings
 from src.pkg.infrastructure.postgresql import DatabaseSessionManager
-from src.pkg.repository.repository import Repository
-from src.pkg.service.service import Service
-
+from src.pkg.repository import Repository
+from src.pkg.service import Service
+from src.pkg.adapters.overpass import OverpassClient
+from src.pkg.adapters.terra import TerraClient
 
 logger = logging.getLogger(__name__)
 
@@ -41,9 +41,16 @@ class App:
 
 def create_app(cfg: Settings) -> App:
     """Create and configure the application."""
-    db = DatabaseSessionManager(str(cfg.get_db_url()))
-    repo = Repository(bounding_box=cfg.BOUNDING_BOX, db=db)
-    service = Service(repo)
+    db = DatabaseSessionManager(cfg.DB.get_db_url())
+    overpass = OverpassClient()
+    terra = TerraClient(
+        cfg.TERRA.API_URL,
+        cfg.TERRA.CLIENT_ID,
+        cfg.TERRA.CLIENT_SECRET,
+        cfg.TERRA.AREA_BOUNDARIES_FEATURE_ID,
+    )
+    repo = Repository(db)
+    service = Service(repo, overpass, terra)
 
     etl = ETL(config=cfg, service=service)
 
