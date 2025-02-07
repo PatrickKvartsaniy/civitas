@@ -47,7 +47,6 @@ def create_app(cfg: Settings) -> App:
         cfg.TERRA.API_URL,
         cfg.TERRA.CLIENT_ID,
         cfg.TERRA.CLIENT_SECRET,
-        cfg.TERRA.AREA_BOUNDARIES_FEATURE_ID,
     )
     repo = Repository(db)
     service = Service(repo, overpass, terra)

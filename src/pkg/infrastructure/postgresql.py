@@ -17,9 +17,12 @@ Base = declarative_base()
 
 
 class DatabaseSessionManager:
-    def __init__(self, host: str, engine_kwargs: dict[str, Any] = {}):
-        self._engine = create_async_engine(host, **engine_kwargs)
+    def __init__(self, uri: str, engine_kwargs=None):
+        if engine_kwargs is None:
+            engine_kwargs = {}
+        self._engine = create_async_engine(uri, **engine_kwargs)
         self._sessionmaker = async_sessionmaker(autocommit=False, bind=self._engine)
+        self._uri = uri
 
     async def close(self):
         if self._engine is None:
@@ -58,7 +61,7 @@ class DatabaseSessionManager:
     async def run_migrations(self):
         """Run Alembic migrations programmatically in online mode."""
         config = Config(ALEMBIC_CONFIG_PATH)
-        config.set_main_option("sqlalchemy.url", self.uri)
+        config.set_main_option("sqlalchemy.url", self._uri)
 
         async with self._engine.begin() as connection:
             await connection.run_sync(

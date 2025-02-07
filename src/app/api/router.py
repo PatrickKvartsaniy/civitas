@@ -1,4 +1,4 @@
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, FastAPI, Request
 from starlette.middleware.cors import CORSMiddleware
 from starlette.staticfiles import StaticFiles
 
@@ -13,6 +13,21 @@ def setup_middleware(app: FastAPI):
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+
+@api_router.get("/buildings")
+async def get_buildings(request: Request):
+    return await request.app.state.service.get_buildings()
+
+
+@api_router.get("/amenities")
+async def get_amenities(request: Request):
+    return await request.app.state.service.get_amenities()
+
+
+@api_router.get("/route")
+async def get_route(request: Request):
+    return await request.app.state.service.get_route()
 
 
 def setup_static(app: FastAPI):

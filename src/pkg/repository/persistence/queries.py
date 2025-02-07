@@ -1,12 +1,16 @@
 import json
+import uuid
 from datetime import datetime
-
-from sqlalchemy import text
-from uuid import uuid4
 from typing import Optional, List
+
+from geoalchemy2.shape import from_shape
+from shapely.geometry import shape
+from sqlalchemy.future import select
 
 from src.pkg.infrastructure.postgresql import DatabaseSessionManager
 from src.pkg.models.models import Amenity, Building
+
+from .models import Amenity as AmenityModel, Building as BuildingModel
 
 
 class PersistenceRepository:
@@ -22,115 +26,103 @@ class PersistenceRepository:
         opening_hours: Optional[str],
         geometry: str,
         updated_at: datetime,
-        updated_by: str,
+        updated_by: Optional[uuid.UUID] = None,
     ):
-        query = text(
-            """
-            INSERT INTO amenities (id, osm_id, name, amenity_type, address, opening_hours, geometry, updated_at, updated_by)
-            VALUES (:id, :osm_id, :name, :amenity_type, :address, :opening_hours, ST_SetSRID(ST_GeomFromGeoJSON(:geometry), 4326), :updated_at, :updated_by)
-            ON CONFLICT (osm_id) DO NOTHING
         """
-        )
+        Insert or update an amenity into the database.
+        """
         async with self.db.session() as session:
-            await session.execute(
-                query,
-                {
-                    "id": str(uuid4()),
-                    "osm_id": osm_id,
-                    "name": name,
-                    "amenity_type": amenity_type,
-                    "address": address,
-                    "opening_hours": opening_hours,
-                    "geometry": geometry,
-                    "updated_at": updated_at,
-                    "updated_by": updated_by,
-                },
+            geo = from_shape(shape(json.loads(geometry)), srid=4326)
+            amenity = AmenityModel(
+                id=uuid.uuid4(),
+                osm_id=osm_id,
+                name=name,
+                amenity_type=amenity_type,
+                address=address,
+                opening_hours=opening_hours,
+                geometry=geo,
+                updated_at=updated_at,
+                updated_by=updated_by,
             )
+            session.add(amenity)
             await session.commit()
 
     async def get_amenities(self) -> List[Amenity]:
-        async with self.db.session() as session:
-            query = text("SELECT * FROM amenities")
-            result = await session.execute(query)
-        return [Amenity(**dict(row)) for row in result]
-
-    async def update_name(self, amenity_id: str, new_name: str):
-        query = text(
-            """
-            UPDATE amenities
-            SET name = :new_name
-            WHERE id = :id
         """
-        )
-        async with self.db.session() as session:
-            await session.execute(query, {"new_name": new_name, "id": amenity_id})
-            await session.commit()
-
-    async def delete_amenity(self, amenity_id: str):
-        query = text(
-            """
-            DELETE FROM amenities
-            WHERE id = :id
+        Retrieve all amenities.
         """
-        )
         async with self.db.session() as session:
-            await session.execute(query, {"id": amenity_id})
-            await session.commit()
+            result = await session.execute(select(AmenityModel))
+            amenities_orm = result.scalars().all()
 
-    async def update_amenity(self):
-        pass
+            amenities_schema = []
+            for amenity_orm in amenities_orm:
+                amenities_schema.append(amenity_orm.as_dto())
+            return amenities_schema
+
+    async def update_amenity_name(self, amenity_id: uuid.UUID, new_name: str):
+        """
+        Update the name of an amenity.
+        """
+        async with self.db.session() as session:
+            amenity = await session.get(Amenity, amenity_id)
+            if amenity:
+                amenity.name = new_name
+                await session.commit()
+
+    async def delete_amenity(self, amenity_id: uuid.UUID):
+        """
+        Delete an amenity by ID.
+        """
+        async with self.db.session() as session:
+            amenity = await session.get(Amenity, amenity_id)
+            if amenity:
+                await session.delete(amenity)
+                await session.commit()
 
     async def load_building(self, osm_id: int, metadata: dict, geometry: str):
-        print(geometry)
-        query = text(
-            """
-            INSERT INTO buildings (id, osm_id, information, geometry)
-            VALUES (:id, :osm_id, :information, ST_SetSRID(ST_GeomFromGeoJSON(:geometry), 4326))
-            ON CONFLICT (osm_id) DO NOTHING
         """
-        )
+        Insert a new building into the database.
+        """
         async with self.db.session() as session:
-            await session.execute(
-                query,
-                {
-                    "id": str(uuid4()),
-                    "osm_id": osm_id,
-                    "information": json.dumps(metadata),
-                    "geometry": geometry,
-                },
+            geo = from_shape(shape(json.loads(geometry)), srid=4326)
+            building = BuildingModel(
+                id=uuid.uuid4(),
+                osm_id=osm_id,
+                information=metadata,
+                geometry=geo,
             )
+            session.add(building)
             await session.commit()
 
     async def get_buildings(self) -> List[Building]:
-        query = text("SELECT * FROM buildings")
         async with self.db.session() as session:
-            result = await session.execute(query)
-        return [Building(**row) for row in result]
+            result = await session.execute(select(BuildingModel))  # Query ORM Model
+            buildings_orm = result.scalars().all()  # Get list of ORM objects
 
-    async def update_metadata(self, building_id: str, new_metadata: dict):
-        query = text(
-            """
-            UPDATE buildings
-            SET information = :new_metadata
-            WHERE id = :id
+            buildings_schema = []
+            for building_orm in buildings_orm:
+                buildings_schema.append(building_orm.as_dto())
+            return buildings_schema
+
+    async def update_building_metadata(
+        self, building_id: uuid.UUID, new_metadata: dict
+    ):
         """
-        )
-        async with self.db.session() as session:
-            await session.execute(
-                query, {"information": new_metadata, "id": building_id}
-            )
-            await session.commit()
-
-    async def delete_building(self, building_id: str):
-        query = text(
-            """
-            DELETE FROM buildings
-            WHERE id = :id
+        Update the metadata (information field) of a building.
         """
-        )
         async with self.db.session() as session:
-            await session.execute(query, {"id": building_id})
-            await session.commit()
+            building = await session.get(Building, building_id)
+            if building:
+                building.information = new_metadata
+                await session.commit()
 
-    async def update_building(self):
-        pass
+    async def delete_building(self, building_id: uuid.UUID):
+        """
+        Delete a building by ID.
+        """
+        async with self.db.session() as session:
+            building = await session.get(Building, building_id)
+            if building:
+                await session.delete(building)
+                await session.commit()

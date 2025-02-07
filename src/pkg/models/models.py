@@ -1,10 +1,14 @@
+import uuid
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class Amenity(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: Optional[uuid.UUID]
     osm_id: int
     name: Optional[str]
     amenity_type: Optional[str]
@@ -16,6 +20,9 @@ class Amenity(BaseModel):
 
 
 class Building(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: Optional[uuid.UUID]
     osm_id: int
-    metadata: dict
+    information: dict
     geometry: str  # Polygon

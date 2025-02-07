@@ -39,3 +39,11 @@ class ServiceInterface(ABC):
     @abstractmethod
     async def sync_amenities(self):
         raise NotImplementedError
+
+    @abstractmethod
+    async def get_buildings(self) -> List[Building]:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_amenities(self) -> List[Amenity]:
+        raise NotImplementedError

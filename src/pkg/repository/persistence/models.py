@@ -1,8 +1,9 @@
 import json
 import uuid
 
+import shapely
 from geoalchemy2.shape import from_shape
-from shapely.geometry.geo import shape
+from shapely.geometry.geo import shape, mapping
 from sqlalchemy import Column, BigInteger, String, JSON, ForeignKey, func, DateTime
 from sqlalchemy.dialects.postgresql import UUID
 
@@ -10,6 +11,7 @@ from geoalchemy2 import Geometry
 from sqlalchemy.orm import validates
 
 from src.pkg.infrastructure.postgresql import Base
+from src.pkg.models import Building as BuildingSchema, Amenity as AmenitySchema
 
 
 class User(Base):
@@ -56,6 +58,20 @@ class Amenity(Base):
             return from_shape(point, srid=4326)  # Convert to WKT with SRID
         return value
 
+    def as_dto(self) -> AmenitySchema:
+        as_dict = {
+            "id": self.id,
+            "osm_id": self.osm_id,
+            "name": self.name,
+            "amenity_type": self.amenity_type,
+            "address": self.address,
+            "opening_hours": self.opening_hours,
+            "geometry": geometry_to_geojson(self.geometry),
+            "updated_at": self.updated_at,
+            "updated_by": self.updated_by,
+        }
+        return AmenitySchema.model_validate(as_dict)
+
 
 class Building(Base):
     __tablename__ = "buildings"
@@ -83,3 +99,20 @@ class Building(Base):
             polygon = shape(geojson_dict)  # Convert GeoJSON to Shapely Polygon
             return from_shape(polygon, srid=4326)  # Convert to WKT with SRID
         return value
+
+    def as_dto(self) -> BuildingSchema:
+        as_dict = {
+            "id": self.id,
+            "osm_id": self.osm_id,
+            "information": self.information,
+            "geometry": geometry_to_geojson(self.geometry),
+        }
+        return BuildingSchema.model_validate(as_dict)
+
+
+def geometry_to_geojson(geometry):
+    """
+    Convert a WKBElement geometry to a GeoJSON string.
+    """
+    geom = mapping(shapely.from_wkb(str(geometry)))
+    return json.dumps(geom)

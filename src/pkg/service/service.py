@@ -1,7 +1,7 @@
 from typing import List
 
 from src.pkg.deps.interfaces import ServiceInterface, RepositoryInterface
-from src.pkg.repository.persistence.models import Building, Amenity
+from src.pkg.models import Building, Amenity
 from src.pkg.adapters.terra import TerraClient
 from src.pkg.adapters.overpass import OverpassClient
 
