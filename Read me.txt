@@ -1,0 +1,10 @@
+--------- why I made separate layers of buidings ----------
+-- for better performance in pgadmin (to have a layer with less count of feature)
+-- will be be easier in visualization 
+-- I gave it the name followed by _hala so you can know who to ask in case you wanna inquire about something.
+-- I didn't change the original layers to not interrupt your work.
+
+--------- why I did not use the information field as a ditionary ----------
+-- to reduce the time of making sql quries every time I want to get a spesific value
+-- to will be complex to make some kinds of statitics on data we get by a query, also hard to verify the results
+-- separating the values out of information field will make it easier to calculate statistics in dashboard
