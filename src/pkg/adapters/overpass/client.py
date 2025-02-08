@@ -24,20 +24,19 @@ class Client:
         """
         query = f"""
         [out:json];
-        way["building"]({bounding_box});
+        way["building"]{bounding_box};
         (._;>;);
         out body;
         """
+        print(query)
         response = self.api.query(query)
 
         buildings = []
         for way in response.ways:
-            nodes = [
-                (node.lon, node.lat) for node in way.nodes
-            ]  # Ensure correct (lon, lat) order
+            nodes = [(node.lon, node.lat) for node in way.nodes]
             building = Building(
                 osm_id=way.id,
-                metadata=way.tags,
+                information=way.tags,
                 geometry=to_geojson(Polygon(nodes)),
             )
             buildings.append(building)
@@ -46,22 +45,23 @@ class Client:
     async def extract_amenities(self, bounding_box: tuple) -> List[Amenity]:
         """
         Fetch all amenities (restaurants, cafés, banks, pharmacies, shops, and offices) within the bounding box.
-
-        :return: Overpy result object with amenity data.
         """
         query = f"""
         [out:json];
         (
-          node["amenity"~"restaurant|cafe|bank|pharmacy"]({bounding_box});
-          node["shop"]({bounding_box});
-          node["office"]({bounding_box});
+          node["amenity"~"restaurant|cafe|bank|pharmacy"]({bounding_box[0]}, {bounding_box[1]}, {bounding_box[2]}, {bounding_box[3]});
+          node["shop"]({bounding_box[0]}, {bounding_box[1]}, {bounding_box[2]}, {bounding_box[3]});
+          node["office"]({bounding_box[0]}, {bounding_box[1]}, {bounding_box[2]}, {bounding_box[3]});
         );
         out body;
         """
-        response = self.api.query(query)
+        print(query)
+        try:
+            response = self.api.query(query)
+        except Exception as e:
+            raise RuntimeError(f"Overpass query failed: {e}")
 
         amenities = []
-
         for node in response.nodes:
             tags = node.tags
             amenity = Amenity(
@@ -71,8 +71,8 @@ class Client:
                 address=tags.get("addr:street"),
                 opening_hours=tags.get("opening_hours"),
                 geometry=to_geojson(
-                    Point(node.lat, node.lon),
-                ),
+                    Point(float(node.lon), float(node.lat))
+                ),  # Ensure correct (lon, lat)
             )
             amenities.append(amenity)
 

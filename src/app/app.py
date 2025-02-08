@@ -49,8 +49,13 @@ def create_app(cfg: Settings) -> App:
         cfg.TERRA.CLIENT_SECRET,
     )
     repo = Repository(db)
-    service = Service(repo, overpass, terra)
-
+    service = Service(
+        repo,
+        terra,
+        overpass,
+        cfg.TERRA.AREA_BOUNDARIES_COLLECTION_ID,
+        cfg.TERRA.AREA_BOUNDARIES_FEATURE_ID,
+    )
     etl = ETL(config=cfg, service=service)
 
     web = FastAPI(

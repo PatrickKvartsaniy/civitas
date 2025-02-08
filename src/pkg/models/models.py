@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field, ConfigDict
 class Amenity(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: Optional[uuid.UUID]
+    id: Optional[uuid.UUID] = None
     osm_id: int
     name: Optional[str]
     amenity_type: Optional[str]
@@ -22,7 +22,7 @@ class Amenity(BaseModel):
 class Building(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: Optional[uuid.UUID]
+    id: Optional[uuid.UUID] = None
     osm_id: int
     information: dict
     geometry: str  # Polygon

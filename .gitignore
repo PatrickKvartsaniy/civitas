@@ -35,3 +35,4 @@ static/assets/.temp
 .env
 pytest_cache/
 **/.terraform/**
+requirements.txt

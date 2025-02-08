@@ -43,5 +43,5 @@ class Repository(RepositoryInterface):
         logger.info(f"Loading {len(buildings)} buildings...")
         for building in buildings:
             await self._persistence_repo.load_building(
-                building.osm_id, building.metadata, building.geometry
+                building.osm_id, building.information, building.geometry
             )
