@@ -13,17 +13,15 @@ deps:
 	poetry export --without-hashes --format=requirements.txt > requirements.txt
 	cp requirements.txt deploy/requirements.txt
 
-.PHONY: tf-init
-tf-init:
-	terraform -chdir=deploy init
-
-.PHONY: tf-plan
-tf-plan:
-	terraform -chdir=deploy plan
-
 .PHONY: deploy
 deploy:
+	terraform -chdir=deploy init
+	terraform -chdir=deploy plan
 	terraform -chdir=deploy apply -auto-approve
+
+.PHONY: kill
+kill:
+    terraform -chdir=deploy destroy -auto-approve
 
 .PHONY: tf-destroy
 tf-destroy:

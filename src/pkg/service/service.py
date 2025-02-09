@@ -54,7 +54,7 @@ class Service(ServiceInterface):
         feature = await self._terra_client.fetch_collection_feature(
             self._feature_collection_id, self._feature_id
         )
-        print(f"Feature: {feature}")
+
         # Extract geometry
         geometry = feature.get("geometry", {})
         if not geometry:
@@ -85,5 +85,4 @@ class Service(ServiceInterface):
         max_lat = max(coord[1] for coord in all_coords)
 
         bbox = (min_lat, min_lon, max_lat, max_lon)
-        print(f"Bounding box: {bbox}")
         return bbox

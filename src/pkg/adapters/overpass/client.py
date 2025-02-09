@@ -28,7 +28,7 @@ class Client:
         (._;>;);
         out body;
         """
-        print(query)
+
         response = self.api.query(query)
 
         buildings = []
@@ -55,7 +55,7 @@ class Client:
         );
         out body;
         """
-        print(query)
+
         try:
             response = self.api.query(query)
         except Exception as e:
@@ -70,9 +70,7 @@ class Client:
                 amenity_type=tags.get("amenity"),
                 address=tags.get("addr:street"),
                 opening_hours=tags.get("opening_hours"),
-                geometry=to_geojson(
-                    Point(float(node.lon), float(node.lat))
-                ),  # Ensure correct (lon, lat)
+                geometry=to_geojson(Point(float(node.lon), float(node.lat))),
             )
             amenities.append(amenity)
 
