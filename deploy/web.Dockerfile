@@ -18,4 +18,6 @@ RUN apt-get update && \
 # Copy the rest of the application code
 COPY . .
 
+EXPOSE 8080
+
 CMD ["python", "main.py", "web"]

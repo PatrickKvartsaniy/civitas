@@ -15,14 +15,15 @@ deps:
 
 .PHONY: deploy
 deploy:
+	terraform -chdir=deploy fmt
 	terraform -chdir=deploy init
 	terraform -chdir=deploy plan
-	terraform -chdir=deploy apply -auto-approve
+	terraform -chdir=deploy apply -auto-approve -var-file=tfvars/main.tfvars
 
 .PHONY: kill
 kill:
     terraform -chdir=deploy destroy -auto-approve
 
-.PHONY: tf-destroy
-tf-destroy:
+.PHONY: destroy
+destroy:
 	terraform -chdir=deploy destroy -auto-approve
