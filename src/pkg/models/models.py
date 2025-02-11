@@ -26,3 +26,12 @@ class Building(BaseModel):
     osm_id: int
     information: dict
     geometry: str  # Polygon
+
+class AdminBoundary(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: Optional[uuid.UUID] = None
+    osm_id: int
+    name: Optional[str]
+    admin_level: Optional[int]
+    geometry: str  # Polygon

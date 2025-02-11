@@ -4,14 +4,14 @@ import uuid
 import shapely
 from geoalchemy2.shape import from_shape
 from shapely.geometry.geo import shape, mapping
-from sqlalchemy import Column, BigInteger, String, JSON, ForeignKey, func, DateTime
+from sqlalchemy import Column, BigInteger, String, JSON, ForeignKey, func, DateTime, Integer
 from sqlalchemy.dialects.postgresql import UUID
 
 from geoalchemy2 import Geometry
 from sqlalchemy.orm import validates
 
 from src.pkg.infrastructure.postgresql import Base
-from src.pkg.models import Building as BuildingSchema, Amenity as AmenitySchema
+from src.pkg.models import Building as BuildingSchema, Amenity as AmenitySchema, AdminBoundary as AdminBoundarySchema
 
 
 class User(Base):
@@ -109,6 +109,41 @@ class Building(Base):
         }
         return BuildingSchema.model_validate(as_dict)
 
+class AdminBoundary(Base):
+    __tablename__ = "admin_boundaries"
+
+    id = Column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        unique=True,
+        nullable=False,
+    )
+    osm_id = Column(BigInteger, unique=True, nullable=False)
+    name = Column(String, nullable=True)
+    admin_level = Column(Integer, nullable=True)
+    geometry = Column(Geometry("POLYGON"), nullable=False)
+
+    @validates("geometry")
+    def validate_geometry(self, key, value):
+        """
+        Converts GeoJSON input to WKT before storing it in the database.
+        """
+        if isinstance(value, str):  # Assuming it's a GeoJSON string
+            geojson_dict = json.loads(value)
+            polygon = shape(geojson_dict)  # Convert GeoJSON to Shapely Polygon
+            return from_shape(polygon, srid=4326)  # Convert to WKT with SRID
+        return value
+
+    def as_dto(self) -> AdminBoundarySchema:
+        as_dict = {
+            "id": self.id,
+            "osm_id": self.osm_id,
+            "name": self.name,
+            "admin_level": self.admin_level,
+            "geometry": geometry_to_geojson(self.geometry),
+        }
+        return AdminBoundary.model_validate(as_dict)
 
 def geometry_to_geojson(geometry):
     """
