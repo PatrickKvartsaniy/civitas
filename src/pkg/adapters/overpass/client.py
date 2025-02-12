@@ -98,7 +98,7 @@ class Client:
         try:
             response: overpy.Result = self.api.query(
                 query
-            )  # Assuming self.api.query() returns a Result object
+            )  # Assuming self.web.query() returns a Result object
         except Exception as e:
             raise RuntimeError(f"Overpass query failed: {e}")
 

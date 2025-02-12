@@ -3,7 +3,7 @@ import asyncio
 import logging
 from fastapi import FastAPI
 
-from .api import api_router, setup_middleware
+from .web import api_router, web_router, setup_middleware
 from .etl import ETL
 from .events import lifespan
 from src.pkg.config.env import Settings
@@ -63,7 +63,9 @@ def create_app(cfg: Settings) -> App:
         title=cfg.PROJECT_NAME,
     )
     web.state.service = service
+    web.state.cfg = cfg.WEB
     setup_middleware(web)
     web.include_router(api_router)
+    web.include_router(web_router)
 
     return App(cfg, etl, web)

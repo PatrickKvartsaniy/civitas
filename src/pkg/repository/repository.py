@@ -45,13 +45,3 @@ class Repository(RepositoryInterface):
             await self._persistence_repo.load_building(
                 building.osm_id, building.information, building.geometry
             )
-
-    async def load_admin_boundaries(self, admin_boundaries: List[AdminBoundary]):
-        logger.info(f"Loading {len(admin_boundaries)} admin boundaries...")
-        for boundary in admin_boundaries:
-            await self._persistence_repo.load_admin_boundary(
-                boundary.osm_id, boundary.name, boundary.admin_level, boundary.geometry
-            )
-
-    async def get_admin_boundaries(self) -> List[AdminBoundary]:
-        return await self._persistence_repo.get_admin_boundaries()
