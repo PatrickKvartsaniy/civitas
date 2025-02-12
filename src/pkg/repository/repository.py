@@ -2,7 +2,7 @@ import logging
 from typing import List
 
 from src.pkg.deps.interfaces import RepositoryInterface
-from src.pkg.models import Amenity, Building, AdminBoundary
+from src.pkg.models import Amenity, Building
 from src.pkg.repository.persistence.queries import PersistenceRepository
 
 logger = logging.getLogger(__name__)

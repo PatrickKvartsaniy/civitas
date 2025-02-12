@@ -54,3 +54,23 @@ class Building(BaseModel):
             },
             "geometry": json.loads(self.geometry),  # Ensure it's a valid GeoJSON object
         }
+
+
+class BuildingWithFunction(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: Optional[uuid.UUID] = None
+    osm_id: int
+    information: Dict[str, Any]
+    geometry: str
+
+    def to_geojson(self) -> Dict[str, Any]:
+        return {
+            "type": "Feature",
+            "properties": {
+                "id": str(self.id) if self.id else None,
+                "osm_id": self.osm_id,
+                "information": self.information,
+            },
+            "geometry": json.loads(self.geometry),  # Ensure it's a valid GeoJSON object
+        }

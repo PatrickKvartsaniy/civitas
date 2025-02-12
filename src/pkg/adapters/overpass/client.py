@@ -6,7 +6,6 @@ from shapely.geometry.point import Point
 from shapely.geometry.polygon import Polygon
 from shapely.io import to_geojson
 
-from src.pkg.models import AdminBoundary
 from src.pkg.models.models import Amenity, Building
 
 
@@ -76,50 +75,3 @@ class Client:
             amenities.append(amenity)
 
         return amenities
-
-    async def extract_admin_boundaries(
-        self, bounding_box: tuple
-    ) -> List[AdminBoundary]:
-        """
-        Fetch administrative boundaries (country, state, city, etc.) within the bounding box.
-
-        :param bounding_box: A tuple (min_lat, min_lon, max_lat, max_lon) defining the area.
-        :return: A list of AdminBoundary objects.
-        """
-        query = f"""
-        [out:json];
-        (
-          relation["boundary"="administrative"]({bounding_box[0]}, {bounding_box[1]}, {bounding_box[2]}, {bounding_box[3]});
-        );
-        (._;>;);
-        out body;
-        """
-
-        try:
-            response: overpy.Result = self.api.query(
-                query
-            )  # Assuming self.web.query() returns a Result object
-        except Exception as e:
-            raise RuntimeError(f"Overpass query failed: {e}")
-
-        nodes: Dict[int, tuple] = {}  # Store node ID -> (lon, lat)
-        ways: Dict[int, List[int]] = {}  # Store way ID -> list of node IDs
-        boundaries = []
-        for relation in response.relations:
-            boundary = {
-                "osm_id": relation.id,
-                "name": relation.tags.get("name"),
-                "admin_level": relation.tags.get("admin_level"),
-                "geometry": to_geojson(
-                    Polygon(
-                        [
-                            (node.lon, node.lat)
-                            for node in relation.members
-                            if node.role == "outer"
-                        ]
-                    )
-                ),
-            }
-            boundaries.append(boundary)
-
-        return boundaries

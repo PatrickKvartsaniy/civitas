@@ -74,5 +74,16 @@ async def map_page(request: Request):
     )
 
 
+@web_router.get("/buildings", response_class=HTMLResponse)
+async def buildings_page(request: Request):
+    return templates.TemplateResponse(
+        "map/buildings.html",
+        {
+            "request": request,
+            "mapbox_access_token": request.app.state.cfg.MAPBOX_ACCESS_TOKEN,
+        },
+    )
+
+
 def setup_static(app: FastAPI):
     app.mount("/static", StaticFiles(directory="static"), name="static")
