@@ -89,7 +89,7 @@
         });
     }
 
-    fetch('http://localhost:8080/api/buildings/geojson')
+    fetch('https://civitas-471b.onrender.com/api/buildings/geojson')
         .then(response => response.json())
         .then(geojson => {
             if (map.loaded()) {
