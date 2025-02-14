@@ -34,6 +34,10 @@
         zoom: 10
     });
 
+    const CACHE_KEY = "buildingsGeoJSON"; // Key for localStorage
+    const CACHE_EXPIRATION = 60 * 60 * 1000; // 1 hour in milliseconds
+    const API_URL = "https://civitas-471b.onrender.com/api/buildings/geojson";
+
     function addBuildingsLayer(map, geojson) {
         map.addSource('buildings-source', {
             type: 'geojson',
@@ -62,17 +66,15 @@
 
         map.on('click', 'buildings-layer', (e) => {
             const coordinates = e.lngLat;
-            const properties = e.features[0].properties; // Get building properties
+            const properties = e.features[0].properties;
 
-            // Highlight clicked building
             map.setPaintProperty('buildings-layer', 'fill-color', [
                 'case',
-                ['==', ['get', 'id'], properties.id], // Match by unique ID
-                '#ff6600', // Highlight color (orange)
-                '#888888' // Default color
+                ['==', ['get', 'id'], properties.id],
+                '#ff6600',
+                '#888888'
             ]);
 
-            // Show Popup with Building Info
             new mapboxgl.Popup()
                 .setLngLat(coordinates)
                 .setHTML(`<strong>Building ID:</strong> ${properties.id || 'N/A'}<br>
@@ -89,17 +91,47 @@
         });
     }
 
-    fetch('https://civitas-471b.onrender.com/api/buildings/geojson')
-        .then(response => response.json())
-        .then(geojson => {
-            if (map.loaded()) {
-                addBuildingsLayer(map, geojson);
-            } else {
-                map.on('load', () => addBuildingsLayer(map, geojson));
-            }
-        })
-        .catch(error => console.error('Error fetching buildings:', error));
+    function fetchAndCacheData() {
+        fetch(API_URL)
+            .then(response => response.json())
+            .then(geojson => {
+                const cacheData = {
+                    data: geojson,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
 
+                if (map.loaded()) {
+                    addBuildingsLayer(map, geojson);
+                } else {
+                    map.on('load', () => addBuildingsLayer(map, geojson));
+                }
+            })
+            .catch(error => console.error('Error fetching buildings:', error));
+    }
+
+    function loadCachedData() {
+        const cached = localStorage.getItem(CACHE_KEY);
+
+        if (cached) {
+            const { data, timestamp } = JSON.parse(cached);
+
+            if (Date.now() - timestamp < CACHE_EXPIRATION) {
+                console.log("Using cached data.");
+                if (map.loaded()) {
+                    addBuildingsLayer(map, data);
+                } else {
+                    map.on('load', () => addBuildingsLayer(map, data));
+                }
+                return;
+            }
+        }
+
+        console.log("Fetching fresh data.");
+        fetchAndCacheData();
+    }
+
+    loadCachedData();
 </script>
 
 </body>
