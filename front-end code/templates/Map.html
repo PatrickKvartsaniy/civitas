@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Civitas Map</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.9.4/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.9.4/mapbox-gl.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+
+        #menu {
+            background: #fff;
+            position: absolute;
+            z-index: 1;
+            top: 10px;
+            right: 10px;
+            border-radius: 3px;
+            width: 140px;
+            border: 1px solid rgba(0, 0, 0, 0.4);
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        #menu a {
+            font-size: 13px;
+            color: #404040;
+            display: block;
+            padding: 10px;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+            text-align: center;
+        }
+
+        #menu a:last-child {
+            border: none;
+        }
+
+        #menu a:hover {
+            background-color: #f8f8f8;
+        }
+
+        #menu a.active {
+            background-color: #3887be;
+            color: #ffffff;
+        }
+
+        #menu a.active:hover {
+            background: #3074a4;
+        }
+    </style>
+</head>
+<body>
+
+<nav id="menu"></nav> 
+<div id="map"></div>
+
+<script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoicGV0cm8ta3ZhcnRzaWFueWkiLCJhIjoiY202ejdiMmlkMDI1ODJwc2s4NTIxeWc4dSJ9.-k0IrJNRzERdc-Qgsl_ovA';
+
+    const map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/streets-v12',
+        center: [14.377774, 35.948777],
+        zoom: 10
+    });
+
+    const dbLink = 'https://civitas-471b.onrender.com/api/';
+
+    // Function to add the amenities layer
+    function addAmenitiesLayer(geojson) {
+        map.addSource('amenities-source', {
+            type: 'geojson',
+            data: geojson
+        });
+
+        map.addLayer({
+            id: 'amenities-layer',
+            type: 'circle',
+            source: 'amenities-source',
+            paint: {
+                'circle-radius': 6,
+                'circle-color': 'rgba(61,153,80,0.55)'
+            }
+        });
+    }
+
+    // Function to add the buildings layer
+    function addBuildingsLayer(geojson) {
+        map.addSource('buildings-source', {
+            type: 'geojson',
+            data: geojson
+        });
+
+        map.addLayer({
+            id: 'buildings-layer',
+            type: 'fill',
+            source: 'buildings-source',
+            paint: {
+                'fill-color': 'rgba(200, 100, 240, 0.5)',
+                'fill-outline-color': '#550088'
+            }
+        });
+    }
+
+    // Fetch amenities data
+    fetch(dbLink + 'amenities')
+        .then(response => response.json())
+        .then(features => {
+            const geojson = {
+                type: 'FeatureCollection',
+                features: features.map(feature => ({
+                    type: 'Feature',
+                    properties: {
+                        id: feature.id,
+                        name: feature.name,
+                        amenity_type: feature.amenity_type,
+                        address: feature.address,
+                        opening_hours: feature.opening_hours
+                    },
+                    geometry: JSON.parse(feature.geometry)
+                }))
+            };
+
+            if (map.loaded()) {
+                addAmenitiesLayer(geojson);
+            } else {
+                map.on('load', () => addAmenitiesLayer(geojson));
+            }
+        })
+        .catch(error => console.error('Error fetching amenities data:', error));
+
+    // Fetch buildings data
+    fetch(dbLink + 'buildings')
+        .then(response => response.json())
+        .then(features => {
+            const geojson = {
+                type: 'FeatureCollection',
+                features: features.map(feature => ({
+                    type: 'Feature',
+                    properties: {
+                        id: feature.id,
+                        information: feature.information
+                    },
+                    geometry: JSON.parse(feature.geometry)
+                }))
+            };
+
+            if (map.loaded()) {
+                addBuildingsLayer(geojson);
+            } else {
+                map.on('load', () => addBuildingsLayer(geojson));
+            }
+        })
+        .catch(error => console.error('Error fetching buildings data:', error));
+
+    // Menu Functionality (Filtering)
+    const menu = document.getElementById('menu');
+    const filters = [
+        { name: 'All', filter: null },
+        { name: 'Parks', filter: ['==', 'amenity_type', 'park'] },
+        { name: 'Restaurants', filter: ['==', 'amenity_type', 'restaurant'] },
+        { name: 'Hospitals', filter: ['==', 'amenity_type', 'hospital'] },
+        { name: 'Buildings', filter: ['has', 'id'] } // Filters for all buildings
+    ];
+
+    filters.forEach(({ name, filter }) => {
+        const link = document.createElement('a');
+        link.href = '#';
+        link.textContent = name;
+
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+
+            if (name === 'Buildings') {
+                map.setFilter('buildings-layer', filter);
+                map.setLayoutProperty('amenities-layer', 'visibility', 'none'); // Hide amenities
+                map.setLayoutProperty('buildings-layer', 'visibility', 'visible'); // Show buildings
+            } else if (name === 'All') {
+                map.setLayoutProperty('amenities-layer', 'visibility', 'visible');
+                map.setLayoutProperty('buildings-layer', 'visibility', 'visible');
+            } else {
+                map.setFilter('amenities-layer', filter);
+                map.setLayoutProperty('amenities-layer', 'visibility', 'visible');
+                map.setLayoutProperty('buildings-layer', 'visibility', 'none'); // Hide buildings
+            }
+
+            menu.querySelectorAll('a').forEach(a => a.classList.remove('active'));
+            link.classList.add('active');
+        });
+
+        menu.appendChild(link);
+    });
+
+    function addLayerWithPopup(layerId, geojson, type, paint, popupFields) {
+    map.addSource(layerId + '-source', {
+        type: 'geojson',
+        data: geojson
+    });
+
+    map.addLayer({
+        id: layerId,
+        type: type,
+        source: layerId + '-source',
+        paint: paint
+    });
+
+    // Add popup functionality
+    map.on('click', layerId, (e) => {
+        const properties = e.features[0].properties;
+        let popupContent = '';
+        popupFields.forEach(field => {
+            if (properties[field]) {
+                popupContent += `<strong>${field}:</strong> ${properties[field]}<br>`;
+            }
+        });
+        new mapboxgl.Popup()
+            .setLngLat(e.lngLat)
+            .setHTML(popupContent)
+            .addTo(map);
+    });
+
+    // Change cursor on hover
+    map.on('mouseenter', layerId, () => {
+        map.getCanvas().style.cursor = 'pointer';
+    });
+    map.on('mouseleave', layerId, () => {
+        map.getCanvas().style.cursor = '';
+    });
+}
+
+
+</script>
+
+</body>
+</html>
