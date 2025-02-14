@@ -58,11 +58,6 @@ async def get_route(request: Request):
     return await request.app.state.service.get_route()
 
 
-@api_router.get("/admin-boundaries")
-async def get_admin_boundaries(request: Request):
-    return await request.app.state.service.get_admin_boundaries()
-
-
 @web_router.get("/map", response_class=HTMLResponse)
 async def map_page(request: Request):
     return templates.TemplateResponse(
