@@ -18,50 +18,10 @@
             bottom: 0;
             width: 100%;
         }
-
-        #menu {
-            background: #fff;
-            position: absolute;
-            z-index: 1;
-            top: 10px;
-            right: 10px;
-            border-radius: 3px;
-            width: 120px;
-            border: 1px solid rgba(0, 0, 0, 0.4);
-            font-family: 'Open Sans', sans-serif;
-        }
-
-        #menu a {
-            font-size: 13px;
-            color: #404040;
-            display: block;
-            padding: 10px;
-            text-decoration: none;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.25);
-            text-align: center;
-        }
-
-        #menu a:last-child {
-            border: none;
-        }
-
-        #menu a:hover {
-            background-color: #f8f8f8;
-        }
-
-        #menu a.active {
-            background-color: #3887be;
-            color: #ffffff;
-        }
-
-        #menu a.active:hover {
-            background: #3074a4;
-        }
     </style>
 </head>
 <body>
 
-<nav id="menu"></nav>
 <div id="map"></div>
 
 <script>
@@ -80,30 +40,53 @@
             data: geojson
         });
 
-        try {
-            map.addLayer({
-                id: 'buildings-layer',
-                type: 'fill',
-                source: 'buildings-source',
-                paint: {
-                    'fill-color': '#888888',
-                    'fill-opacity': 0.5
-                }
-            });
+        map.addLayer({
+            id: 'buildings-layer',
+            type: 'fill',
+            source: 'buildings-source',
+            paint: {
+                'fill-color': '#888888',
+                'fill-opacity': 0.5
+            }
+        });
 
-            map.addLayer({
-                id: 'buildings-outline',
-                type: 'line',
-                source: 'buildings-source',
-                paint: {
-                    'line-color': '#000',
-                    'line-width': 1
-                }
-            });
+        map.addLayer({
+            id: 'buildings-outline',
+            type: 'line',
+            source: 'buildings-source',
+            paint: {
+                'line-color': '#000',
+                'line-width': 1
+            }
+        });
 
-        } catch (err) {
-            console.error('Error loading buildings layer:', err);
-        }
+        map.on('click', 'buildings-layer', (e) => {
+            const coordinates = e.lngLat;
+            const properties = e.features[0].properties; // Get building properties
+
+            // Highlight clicked building
+            map.setPaintProperty('buildings-layer', 'fill-color', [
+                'case',
+                ['==', ['get', 'id'], properties.id], // Match by unique ID
+                '#ff6600', // Highlight color (orange)
+                '#888888' // Default color
+            ]);
+
+            // Show Popup with Building Info
+            new mapboxgl.Popup()
+                .setLngLat(coordinates)
+                .setHTML(`<strong>Building ID:</strong> ${properties.id || 'N/A'}<br>
+                          <strong>Name:</strong> ${properties.name || 'Unknown'}`)
+                .addTo(map);
+        });
+
+        map.on('mouseenter', 'buildings-layer', () => {
+            map.getCanvas().style.cursor = 'pointer';
+        });
+
+        map.on('mouseleave', 'buildings-layer', () => {
+            map.getCanvas().style.cursor = '';
+        });
     }
 
     fetch('http://localhost:8080/api/buildings/geojson')
