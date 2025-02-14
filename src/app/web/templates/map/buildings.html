@@ -34,34 +34,83 @@
         zoom: 10
     });
 
-    const CACHE_KEY = "buildingsGeoJSON"; // Key for localStorage
+    const DB_NAME = "CivitasCache";
+    const STORE_NAME = "buildings";
     const CACHE_EXPIRATION = 60 * 60 * 1000; // 1 hour in milliseconds
     const API_URL = "https://civitas-471b.onrender.com/api/buildings/geojson";
 
-    function addBuildingsLayer(map, geojson) {
-        map.addSource('buildings-source', {
-            type: 'geojson',
-            data: geojson
+    function openDB() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(DB_NAME, 1);
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains(STORE_NAME)) {
+                    db.createObjectStore(STORE_NAME, { keyPath: "id" });
+                }
+            };
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject("Failed to open IndexedDB");
         });
+    }
+
+    function getCachedData() {
+        return openDB().then(db => {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, "readonly");
+                const store = tx.objectStore(STORE_NAME);
+                const request = store.get("geojson");
+
+                request.onsuccess = () => {
+                    const result = request.result;
+                    if (result && Date.now() - result.timestamp < CACHE_EXPIRATION) {
+                        resolve(result.data);
+                    } else {
+                        resolve(null);
+                    }
+                };
+                request.onerror = () => reject("Failed to retrieve cached data");
+            });
+        });
+    }
+
+    function cacheData(geojson) {
+        return openDB().then(db => {
+            const tx = db.transaction(STORE_NAME, "readwrite");
+            const store = tx.objectStore(STORE_NAME);
+            store.put({ id: "geojson", data: geojson, timestamp: Date.now() });
+        });
+    }
+
+    function fetchAndCacheData() {
+        fetch(API_URL)
+            .then(response => response.json())
+            .then(geojson => {
+                cacheData(geojson);
+                addBuildingsLayer(geojson);
+            })
+            .catch(error => console.error('Error fetching buildings:', error));
+    }
+
+    function addBuildingsLayer(geojson) {
+        if (map.getSource('buildings-source')) {
+            map.getSource('buildings-source').setData(geojson);
+            return;
+        }
+
+        map.addSource('buildings-source', { type: 'geojson', data: geojson });
 
         map.addLayer({
             id: 'buildings-layer',
             type: 'fill',
             source: 'buildings-source',
-            paint: {
-                'fill-color': '#888888',
-                'fill-opacity': 0.5
-            }
+            paint: { 'fill-color': '#888888', 'fill-opacity': 0.5 }
         });
 
         map.addLayer({
             id: 'buildings-outline',
             type: 'line',
             source: 'buildings-source',
-            paint: {
-                'line-color': '#000',
-                'line-width': 1
-            }
+            paint: { 'line-color': '#000', 'line-width': 1 }
         });
 
         map.on('click', 'buildings-layer', (e) => {
@@ -91,47 +140,16 @@
         });
     }
 
-    function fetchAndCacheData() {
-        fetch(API_URL)
-            .then(response => response.json())
-            .then(geojson => {
-                const cacheData = {
-                    data: geojson,
-                    timestamp: Date.now()
-                };
-                localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
-
-                if (map.loaded()) {
-                    addBuildingsLayer(map, geojson);
-                } else {
-                    map.on('load', () => addBuildingsLayer(map, geojson));
-                }
-            })
-            .catch(error => console.error('Error fetching buildings:', error));
-    }
-
-    function loadCachedData() {
-        const cached = localStorage.getItem(CACHE_KEY);
-
-        if (cached) {
-            const { data, timestamp } = JSON.parse(cached);
-
-            if (Date.now() - timestamp < CACHE_EXPIRATION) {
-                console.log("Using cached data.");
-                if (map.loaded()) {
-                    addBuildingsLayer(map, data);
-                } else {
-                    map.on('load', () => addBuildingsLayer(map, data));
-                }
-                return;
-            }
+    getCachedData().then(cachedData => {
+        if (cachedData) {
+            console.log("Using cached data.");
+            addBuildingsLayer(cachedData);
+        } else {
+            console.log("Fetching fresh data.");
+            fetchAndCacheData();
         }
+    });
 
-        console.log("Fetching fresh data.");
-        fetchAndCacheData();
-    }
-
-    loadCachedData();
 </script>
 
 </body>
