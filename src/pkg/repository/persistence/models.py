@@ -4,7 +4,16 @@ import uuid
 import shapely
 from geoalchemy2.shape import from_shape
 from shapely.geometry.geo import shape, mapping
-from sqlalchemy import Column, BigInteger, String, JSON, ForeignKey, func, DateTime
+from sqlalchemy import (
+    Column,
+    BigInteger,
+    String,
+    JSON,
+    ForeignKey,
+    func,
+    DateTime,
+    Boolean,
+)
 from sqlalchemy.dialects.postgresql import UUID
 
 from geoalchemy2 import Geometry
@@ -88,6 +97,9 @@ class Building(Base):
     geometry = Column(
         Geometry("POLYGON"), nullable=False
     )  # Geometry column for polygons
+    requires_maintenance = Column(
+        Boolean, default=False, nullable=False, server_default="false"
+    )
 
     @validates("geometry")
     def validate_geometry(self, key, value):

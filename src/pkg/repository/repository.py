@@ -3,7 +3,7 @@ from typing import List
 from aiocache import cached, caches
 
 from src.pkg.deps.interfaces import RepositoryInterface
-from src.pkg.models import Amenity, Building
+from src.pkg.models import Amenity, Building, BuildingUpdate, AmenityUpdate
 from src.pkg.repository.persistence.queries import PersistenceRepository
 
 logger = logging.getLogger(__name__)
@@ -26,14 +26,14 @@ class Repository(RepositoryInterface):
         logger.info("Fetching buildings from database...")
         return await self._persistence_repo.get_buildings()
 
-    async def update_amenity(self, amenity: Amenity):
+    async def update_amenity(self, amenity_id: str, update: AmenityUpdate):
         """Update amenity and invalidate cache."""
-        await self._persistence_repo.update_name(amenity.id, amenity.name)
+        await self._persistence_repo.update_amenity(amenity_id, update)
         await self.invalidate_cache("cached_amenities")  # Clear cache
 
-    async def update_building(self, building: Building):
+    async def update_building(self, building_id: str, update: BuildingUpdate):
         """Update building and invalidate cache."""
-        await self._persistence_repo.update_metadata(building.id, building.metadata)
+        await self._persistence_repo.update_building(building_id, update)
         await self.invalidate_cache("cached_buildings")  # Clear cache
 
     async def load_amenities(self, amenities: List[Amenity]):
@@ -62,7 +62,7 @@ class Repository(RepositoryInterface):
         await self.invalidate_cache("cached_buildings")  # Clear cache after insert
 
     @staticmethod
-    async def invalidate_cache(self, key: str):
+    async def invalidate_cache(key: str):
         """Invalidate cache when data changes."""
         cache = caches.get("default")
         await cache.delete(key)

@@ -8,7 +8,7 @@ from shapely.geometry import shape
 from sqlalchemy.future import select
 
 from src.pkg.infrastructure.postgresql import DatabaseSessionManager
-from src.pkg.models import Amenity, Building
+from src.pkg.models import Amenity, Building, AmenityUpdate, BuildingUpdate
 
 from .models import (
     Amenity as AmenityModel,
@@ -73,6 +73,21 @@ class PersistenceRepository:
                 amenity.name = new_name
                 await session.commit()
 
+    async def update_amenity(self, amenity_id: str, update: AmenityUpdate):
+        """
+        Update the metadata (information field) of an amenity.
+        """
+        async with self.db.session() as session:
+            amenity = await session.get(Amenity, amenity_id)
+            if amenity:
+                amenity.name = update.name
+                amenity.amenity_type = update.amenity_type
+                amenity.address = update.address
+                amenity.opening_hours = update.opening_hours
+                amenity.updated_at = datetime.now()
+                amenity.updated_by = update.updated_by
+                await session.commit()
+
     async def delete_amenity(self, amenity_id: uuid.UUID):
         """
         Delete an amenity by ID.
@@ -118,6 +133,19 @@ class PersistenceRepository:
             building = await session.get(Building, building_id)
             if building:
                 building.information = new_metadata
+                await session.commit()
+
+    async def update_building(self, building_id: str, update: BuildingUpdate):
+        """
+        Update the maintenance status of a building.
+        """
+        async with self.db.session() as session:
+            building = await session.get(Building, building_id)
+            if building:
+                building.requires_maintenance = update.requires_maintenance
+                building.information = update.information
+                building.updated_at = datetime.now()
+                building.updated_by = update.updated_by
                 await session.commit()
 
     async def delete_building(self, building_id: uuid.UUID):

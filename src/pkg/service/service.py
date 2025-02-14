@@ -1,7 +1,7 @@
 from typing import List
 
 from src.pkg.deps.interfaces import ServiceInterface, RepositoryInterface
-from src.pkg.models import Building, Amenity
+from src.pkg.models import Building, Amenity, BuildingUpdate, AmenityUpdate
 from src.pkg.adapters.terra import TerraClient
 from src.pkg.adapters.overpass import OverpassClient
 
@@ -37,14 +37,6 @@ class Service(ServiceInterface):
         except Exception as e:
             print(f"syncing amenities failed. Error: {e}")
 
-    async def sync_admin_boundaries(self):
-        try:
-            boundaries = await self._fetch_boundaries()
-            ab = await self._overpass_client.extract_admin_boundaries(boundaries)
-            await self._repository.load_admin_boundaries(ab)
-        except Exception as e:
-            print(f"syncing amenities failed. Error: {e}")
-
     async def get_buildings(self) -> List[Building]:
         await self._fetch_boundaries()
         return await self._repository.get_buildings()
@@ -52,11 +44,11 @@ class Service(ServiceInterface):
     async def get_amenities(self) -> List[Amenity]:
         return await self._repository.get_amenities()
 
-    async def update_building(self, building: Building):
-        await self._repository.update_building(building)
+    async def update_building(self, building_id: str, update: BuildingUpdate):
+        await self._repository.update_building(building_id, update)
 
-    async def update_amenity(self, amenity: Amenity):
-        await self._repository.update_amenity(amenity)
+    async def update_amenity(self, amenity_id: str, update: AmenityUpdate):
+        await self._repository.update_amenity(amenity_id, update)
 
     async def _fetch_boundaries(self):
         feature = await self._terra_client.fetch_collection_feature(

@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 from typing import List
 
-from src.pkg.models import Amenity, Building
+from src.pkg.models import Amenity, Building, BuildingUpdate, AmenityUpdate
 
 
 class RepositoryInterface(ABC):
@@ -23,11 +23,11 @@ class RepositoryInterface(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def update_amenity(self, amenity: Amenity):
+    async def update_building(self, building_id: str, update: BuildingUpdate):
         raise NotImplementedError
 
     @abstractmethod
-    async def update_building(self, building: Building):
+    async def update_amenity(self, amenity_id: str, update: AmenityUpdate):
         raise NotImplementedError
 
 
@@ -46,8 +46,4 @@ class ServiceInterface(ABC):
 
     @abstractmethod
     async def get_amenities(self) -> List[Amenity]:
-        raise NotImplementedError
-
-    @abstractmethod
-    async def sync_admin_boundaries(self):
         raise NotImplementedError

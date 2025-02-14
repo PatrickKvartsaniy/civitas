@@ -10,6 +10,5 @@ class ETL:
         await self.sync()
 
     async def sync(self):
-        # await self.service.sync_buildings()
-        # await self.service.sync_amenities()
-        await self.service.sync_admin_boundaries()
+        await self.service.sync_buildings()
+        await self.service.sync_amenities()

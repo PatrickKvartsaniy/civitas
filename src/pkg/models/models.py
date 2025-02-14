@@ -36,6 +36,14 @@ class Amenity(BaseModel):
         }
 
 
+class AmenityUpdate(BaseModel):
+    name: Optional[str]
+    amenity_type: Optional[str]
+    address: Optional[str]
+    opening_hours: Optional[str]
+    updated_by: Optional[str]
+
+
 class Building(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -43,6 +51,9 @@ class Building(BaseModel):
     osm_id: int
     information: Dict[str, Any]
     geometry: str  # GeoJSON Polygon as string
+    requires_maintenance: bool
+    updated_at: datetime = Field(default_factory=datetime.now)
+    updated_by: Optional[str] = None
 
     def to_geojson(self) -> Dict[str, Any]:
         return {
@@ -56,7 +67,13 @@ class Building(BaseModel):
         }
 
 
-class BuildingWithFunction(BaseModel):
+class BuildingUpdate(BaseModel):
+    information: Dict[str, Any]
+    requires_maintenance: bool
+    updated_by: Optional[str]
+
+
+class BuildingWithFunction(Building):
     model_config = ConfigDict(from_attributes=True)
 
     id: Optional[uuid.UUID] = None

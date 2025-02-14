@@ -1,11 +1,10 @@
 import os
-
 from fastapi import APIRouter, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from src.pkg.models import Amenity, AmenityUpdate, BuildingUpdate
 
 api_router = APIRouter(prefix="/api")
 web_router = APIRouter(prefix="/web")
@@ -14,7 +13,7 @@ templates_dir = os.path.join(os.path.dirname(__file__), "templates")
 templates = Jinja2Templates(directory=templates_dir)
 
 
-# function for enabling CORS on web server
+# Function for enabling CORS on web server
 def setup_middleware(app: FastAPI):
     app.add_middleware(
         CORSMiddleware,
@@ -39,6 +38,22 @@ async def get_buildings_geojson(request: Request):
     }
 
 
+@api_router.patch("/buildings/{building_id}")
+async def update_building(request: Request, building_id: str, update: BuildingUpdate):
+    """Fixing the order of arguments and ensuring await is used"""
+    return await request.app.state.service.update_building(building_id, update)
+
+
+@api_router.delete("/buildings/{building_id}")
+async def delete_building(request: Request, building_id: str):
+    building = await request.app.state.service.get_building(building_id)
+    if not building:
+        return {"error": "Building not found."}, 404
+
+    await request.app.state.service.delete_building(building)
+    return {"message": "Building deleted."}
+
+
 @api_router.get("/amenities")
 async def get_amenities(request: Request):
     return await request.app.state.service.get_amenities()
@@ -51,6 +66,22 @@ async def get_amenities_geojson(request: Request):
         "type": "FeatureCollection",
         "features": [a.to_geojson() for a in amenities],
     }
+
+
+@api_router.patch("/amenities/{amenity_id}")
+async def update_amenity(request: Request, amenity_id: str, update: AmenityUpdate):
+    """Fixing parameter order and ensuring await is used"""
+    return await request.app.state.service.update_amenity(amenity_id, update)
+
+
+@api_router.delete("/amenities/{amenity_id}")
+async def delete_amenity(request: Request, amenity_id: str):
+    amenity = await request.app.state.service.get_amenity(amenity_id)
+    if not amenity:
+        return {"error": "Amenity not found."}, 404
+
+    await request.app.state.service.delete_amenity(amenity)
+    return {"message": "Amenity deleted."}
 
 
 @api_router.get("/route")
