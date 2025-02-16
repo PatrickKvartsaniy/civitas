@@ -8,6 +8,7 @@ from shapely.geometry import shape
 from sqlalchemy.future import select
 from sqlalchemy import func, update
 from sqlalchemy.orm import aliased
+from sqlalchemy.util.preloaded import orm
 
 from src.pkg.infrastructure.postgresql import DatabaseSessionManager
 from src.pkg.models import Amenity, Building, AmenityUpdate, BuildingUpdate
@@ -121,16 +122,17 @@ class PersistenceRepository:
         async with self.db.session() as session:
             # Query buildings with their related amenities
             result = await session.execute(
-                select(BuildingModel).outerjoin(
-                    AmenityModel, BuildingModel.amenity == AmenityModel.id
-                )  # Join on amenity
+                select(BuildingModel)
+                .outerjoin(AmenityModel, BuildingModel.amenity == AmenityModel.id)
+                .options(
+                    orm.joinedload(BuildingModel.amenity_rel)
+                )  # Eager load amenity_rel
             )
-            buildings_orm = result.scalars().all()  # Fetch all buildings
 
-            buildings_schema = []
-            for building_orm in buildings_orm:
-                await session.refresh(building_orm, ["amenity_rel"])
-                buildings_schema.append(building_orm.as_dto())
+            buildings_orm = result.scalars().all()
+            buildings_schema = [
+                building_orm.as_dto() for building_orm in buildings_orm
+            ]  # List comprehension
 
             return buildings_schema
 

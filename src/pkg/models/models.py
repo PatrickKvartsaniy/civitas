@@ -60,15 +60,16 @@ class Building(BaseModel):
 
     def to_geojson(self) -> Dict[str, Any]:
         # Create the base properties dictionary
+        amenity_type = self.amenity.amenity_type if self.amenity else None
+        if amenity_type:
+            print(amenity_type)
         properties = {
             "id": str(self.id) if self.id else None,
             "osm_id": self.osm_id,
             "requires_maintenance": self.requires_maintenance,
             "updated_at": self.updated_at.isoformat(),
             "updated_by": self.updated_by,
-            "amenity_category": amenity_category_map.get(
-                self.amenity.amenity_type, "Residential"
-            ),
+            "amenity_category": amenity_category_map.get(amenity_type, "Residential"),
         }
 
         # Unpack the 'information' dictionary into the properties dictionary
