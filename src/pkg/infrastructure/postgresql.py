@@ -1,5 +1,5 @@
 import contextlib
-from typing import Any, AsyncIterator
+from typing import AsyncIterator
 
 from alembic import context
 from alembic.config import Config

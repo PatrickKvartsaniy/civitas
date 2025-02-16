@@ -27,13 +27,19 @@ class _DatabaseSettings(BaseSettings):
         )
 
 
+class _WebSettings(BaseSettings):
+    MAPBOX_ACCESS_TOKEN: str = (
+        "pk.eyJ1IjoicGV0cm8ta3ZhcnRzaWFueWkiLCJhIjoiY202ejdiMmlkMDI1ODJwc2s4NTIxeWc4dSJ9.-k0IrJNRzERdc-Qgsl_ovA"
+    )
+
+
 class Settings(BaseSettings):
     ENV: str = "dev"
     HOST: str = "0.0.0.0"
     PORT: int = 8080
     LOG_LEVEL: str = "DEBUG"
     PROJECT_NAME: str = "Civitas"
-
+    WEB: _WebSettings = _WebSettings()
     TERRA: _TerraSettings = _TerraSettings()
     DB: _DatabaseSettings = _DatabaseSettings()
 

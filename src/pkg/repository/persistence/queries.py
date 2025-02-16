@@ -8,10 +8,9 @@ from shapely.geometry import shape
 from sqlalchemy.future import select
 
 from src.pkg.infrastructure.postgresql import DatabaseSessionManager
-from src.pkg.models import AdminBoundary, Amenity, Building
+from src.pkg.models import Amenity, Building
 
 from .models import (
-    AdminBoundary as AdminBoundaryModel,
     Amenity as AmenityModel,
     Building as BuildingModel,
 )
@@ -130,34 +129,3 @@ class PersistenceRepository:
             if building:
                 await session.delete(building)
                 await session.commit()
-
-    async def load_admin_boundary(
-        self, osm_id: int, name: str, level: int, geometry: str
-    ):
-        """
-        Insert a new admin boundary the database.
-        """
-        async with self.db.session() as session:
-            geo = from_shape(shape(json.loads(geometry)), srid=4326)
-            ab = AdminBoundaryModel(
-                id=uuid.uuid4(),
-                osm_id=osm_id,
-                name=name,
-                admin_level=level,
-                geometry=geo,
-            )
-            session.add(ab)
-            await session.commit()
-
-    async def get_admin_boundaries(self) -> List[AdminBoundary]:
-        """
-        Retrieve all administrative boundaries.
-        """
-        async with self.db.session() as session:
-            result = await session.execute(select(AdminBoundaryModel))
-            amenities_orm = result.scalars().all()
-
-            amenities_schema = []
-            for amenity_orm in amenities_orm:
-                amenities_schema.append(amenity_orm.as_dto())
-            return amenities_schema

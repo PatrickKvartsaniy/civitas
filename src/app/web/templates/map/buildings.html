@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Civitas Map</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.9.4/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.9.4/mapbox-gl.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<script>
+    mapboxgl.accessToken = "{{mapbox_access_token}}";
+
+    const map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/streets-v12',
+        center: [14.4551924, 35.9052445],
+        zoom: 10
+    });
+
+    const DB_NAME = "CivitasCache";
+    const STORE_NAME = "buildings";
+    const CACHE_EXPIRATION = 60 * 60 * 1000; // 1 hour in milliseconds
+    const API_URL = "https://civitas-471b.onrender.com/api/buildings/geojson";
+
+    function openDB() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(DB_NAME, 1);
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains(STORE_NAME)) {
+                    db.createObjectStore(STORE_NAME, { keyPath: "id" });
+                }
+            };
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject("Failed to open IndexedDB");
+        });
+    }
+
+    function getCachedData() {
+        return openDB().then(db => {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, "readonly");
+                const store = tx.objectStore(STORE_NAME);
+                const request = store.get("geojson");
+
+                request.onsuccess = () => {
+                    const result = request.result;
+                    if (result && Date.now() - result.timestamp < CACHE_EXPIRATION) {
+                        resolve(result.data);
+                    } else {
+                        resolve(null);
+                    }
+                };
+                request.onerror = () => reject("Failed to retrieve cached data");
+            });
+        });
+    }
+
+    function cacheData(geojson) {
+        return openDB().then(db => {
+            const tx = db.transaction(STORE_NAME, "readwrite");
+            const store = tx.objectStore(STORE_NAME);
+            store.put({ id: "geojson", data: geojson, timestamp: Date.now() });
+        });
+    }
+
+    function fetchAndCacheData() {
+        fetch(API_URL)
+            .then(response => response.json())
+            .then(geojson => {
+                cacheData(geojson);
+                addBuildingsLayer(geojson);
+            })
+            .catch(error => console.error('Error fetching buildings:', error));
+    }
+
+    function addBuildingsLayer(geojson) {
+        if (map.getSource('buildings-source')) {
+            map.getSource('buildings-source').setData(geojson);
+            return;
+        }
+
+        map.addSource('buildings-source', { type: 'geojson', data: geojson });
+
+        map.addLayer({
+            id: 'buildings-layer',
+            type: 'fill',
+            source: 'buildings-source',
+            paint: { 'fill-color': '#888888', 'fill-opacity': 0.5 }
+        });
+
+        map.addLayer({
+            id: 'buildings-outline',
+            type: 'line',
+            source: 'buildings-source',
+            paint: { 'line-color': '#000', 'line-width': 1 }
+        });
+
+        map.on('click', 'buildings-layer', (e) => {
+            const coordinates = e.lngLat;
+            const properties = e.features[0].properties;
+
+            map.setPaintProperty('buildings-layer', 'fill-color', [
+                'case',
+                ['==', ['get', 'id'], properties.id],
+                '#ff6600',
+                '#888888'
+            ]);
+
+            new mapboxgl.Popup()
+                .setLngLat(coordinates)
+                .setHTML(`<strong>Building ID:</strong> ${properties.id || 'N/A'}<br>
+                          <strong>Name:</strong> ${properties.name || 'Unknown'}`)
+                .addTo(map);
+        });
+
+        map.on('mouseenter', 'buildings-layer', () => {
+            map.getCanvas().style.cursor = 'pointer';
+        });
+
+        map.on('mouseleave', 'buildings-layer', () => {
+            map.getCanvas().style.cursor = '';
+        });
+    }
+
+    getCachedData().then(cachedData => {
+        if (cachedData) {
+            console.log("Using cached data.");
+            addBuildingsLayer(cachedData);
+        } else {
+            console.log("Fetching fresh data.");
+            fetchAndCacheData();
+        }
+    });
+
+</script>
+
+</body>
+</html>
