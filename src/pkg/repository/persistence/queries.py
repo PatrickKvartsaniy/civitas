@@ -159,29 +159,31 @@ class PersistenceRepository:
                 await session.delete(building)
                 await session.commit()
 
-    async def get_building(self, building_id: uuid.UUID) -> Building:
+    async def get_building(
+        self, building_id: uuid.UUID
+    ) -> Optional[Building]:  # Return DTO
         """
         Retrieve a building by ID.
         """
         async with self.db.session() as session:
-            building = await session.get(Building, building_id)
-            return building.as_dto()
+            building_orm = await session.get(
+                BuildingModel, building_id
+            )  # Get ORM object
+            if building_orm:  # Check if the building exists
+                return building_orm.as_dto()  # Convert to DTO before returning
+            return None
 
-    async def get_building_amenity(self, building_id: uuid.UUID) -> Amenity:
+    async def get_building_amenity(self, building_id: uuid.UUID) -> Optional[Amenity]:
         """
         Retrieve the amenity *inside* a building using PostGIS.
         """
-        async with self.db.session() as session:
-            amenity = (
-                await session.query(Amenity)
-                .filter(
-                    func.ST_Contains(Building.geometry, Amenity.geometry),
-                    Building.id == building_id,
-                )
-                .first()
+        async with self.db.session() as session:  # Ensure async session usage
+            result = await session.execute(
+                select(Amenity)
+                .join(Building, func.ST_Contains(Building.geometry, Amenity.geometry))
+                .filter(Building.id == building_id)
             )
-
-            return amenity
+            return result.scalars().first()  # Get the first matching amenity
 
     async def get_amenities_within_radius(
         self, point: str, radius: int

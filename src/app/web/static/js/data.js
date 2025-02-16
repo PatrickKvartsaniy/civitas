@@ -45,7 +45,7 @@ function cacheData(geojson) {
 }
 
 function fetchAndCacheData(callback) {
-    fetch(API_URL + "/buildings")
+    fetch(API_URL + "/buildings/geojson")
       .then(response => {
             if (!response.ok) { // Check for HTTP errors (status outside 200-299)
                 throw new Error(`HTTP error! status: ${response.status}`); // Throw an error to be caught

@@ -17,7 +17,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID
 
 from geoalchemy2 import Geometry
-from sqlalchemy.orm import validates
+from sqlalchemy.orm import validates, relationship
 
 from src.pkg.infrastructure.postgresql import Base
 from src.pkg.models import Building as BuildingSchema, Amenity as AmenitySchema
@@ -52,20 +52,25 @@ class Amenity(Base):
     amenity_type = Column(String, nullable=True)
     address = Column(String, nullable=True)
     opening_hours = Column(String, nullable=True)
-    geometry = Column(Geometry("POINT"), nullable=False)  # Geometry column for points
-    updated_at = Column(DateTime, default=func.now(), nullable=False)
+    geometry = Column(Geometry("POINT", srid=4326), nullable=False)
+    updated_at = Column(
+        DateTime,
+        default=func.now(),
+        nullable=False,
+        onupdate=func.now(),
+        server_default=func.now(),
+    )
     updated_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
-    building = Column(UUID(as_uuid=True), ForeignKey("buildings.id"), nullable=True)
 
     @validates("geometry")
     def validate_geometry(self, key, value):
-        """
-        Converts GeoJSON input to WKT before storing it in the database.
-        """
-        if isinstance(value, str):  # Assuming it's a GeoJSON string
-            geojson_dict = json.loads(value)
-            point = shape(geojson_dict)  # Convert GeoJSON to Shapely Polygon
-            return from_shape(point, srid=4326)  # Convert to WKT with SRID
+        if isinstance(value, str):
+            try:  # Handle potential JSON decoding errors
+                geojson_dict = json.loads(value)
+                point = shape(geojson_dict)
+                return from_shape(point, srid=4326)
+            except json.JSONDecodeError as e:
+                raise ValueError(f"Invalid GeoJSON: {e}")  # Re-raise as ValueError
         return value
 
     def as_dto(self) -> AmenitySchema:
@@ -96,26 +101,33 @@ class Building(Base):
     osm_id = Column(BigInteger, unique=True, nullable=False)
     information = Column(JSON, nullable=False)  # Stores metadata as a JSON object
     geometry = Column(
-        Geometry("POLYGON"), nullable=False
-    )  # Geometry column for polygons
+        Geometry("POLYGON", srid=4326), nullable=False
+    )  # SRID in column definition
     requires_maintenance = Column(
         Boolean, default=False, nullable=False, server_default="false"
     )
 
     amenity = Column(UUID(as_uuid=True), ForeignKey("amenities.id"), nullable=True)
+    amenity_rel = relationship("Amenity")
 
-    updated_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime,
+        default=func.now(),
+        nullable=False,
+        onupdate=func.now(),
+        server_default=func.now(),
+    )
     updated_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
 
     @validates("geometry")
     def validate_geometry(self, key, value):
-        """
-        Converts GeoJSON input to WKT before storing it in the database.
-        """
-        if isinstance(value, str):  # Assuming it's a GeoJSON string
-            geojson_dict = json.loads(value)
-            polygon = shape(geojson_dict)  # Convert GeoJSON to Shapely Polygon
-            return from_shape(polygon, srid=4326)  # Convert to WKT with SRID
+        if isinstance(value, str):
+            try:  # Handle potential JSON decoding errors
+                geojson_dict = json.loads(value)
+                polygon = shape(geojson_dict)
+                return from_shape(polygon, srid=4326)
+            except json.JSONDecodeError as e:
+                raise ValueError(f"Invalid GeoJSON: {e}")  # Re-raise as ValueError
         return value
 
     def as_dto(self) -> BuildingSchema:
@@ -124,13 +136,25 @@ class Building(Base):
             "osm_id": self.osm_id,
             "information": self.information,
             "geometry": geometry_to_geojson(self.geometry),
+            "requires_maintenance": self.requires_maintenance,
+            "updated_at": self.updated_at,
+            "updated_by": self.updated_by,
         }
+
+        if self.amenity_rel:  # Check if amenity_rel is not None
+            as_dict["amenity"] = self.amenity_rel.as_dto()  # Convert to DTO
+        else:
+            as_dict["amenity"] = None  # Or a default value if appropriate
+
         return BuildingSchema.model_validate(as_dict)
 
 
-def geometry_to_geojson(geometry):
+def geometry_to_geojson(geometry) -> str:
     """
-    Convert a WKBElement geometry to a GeoJSON string.
+    Convert a WKBElement geometry to a GeoJSON string. Handles None geometries.
     """
-    geom = mapping(shapely.from_wkb(str(geometry)))
-    return json.dumps(geom)
+    try:
+        geom = mapping(shapely.from_wkb(str(geometry)))  # Convert to bytes first
+        return json.dumps(geom)
+    except Exception as e:  # Catch any conversion errors
+        raise f"Error converting geometry to GeoJSON: {e}"

@@ -5,6 +5,8 @@ from typing import Optional, Dict, Any
 
 from pydantic import BaseModel, Field, ConfigDict
 
+from .consts import amenity_category_map
+
 
 class Amenity(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -51,23 +53,30 @@ class Building(BaseModel):
     osm_id: int
     information: Dict[str, Any]
     geometry: str  # GeoJSON Polygon as string
-    amenity: Optional[Amenity] = None
     requires_maintenance: bool
     updated_at: datetime = Field(default_factory=datetime.now)
     updated_by: Optional[str] = None
 
     def to_geojson(self) -> Dict[str, Any]:
+        # Create the base properties dictionary
+        properties = {
+            "id": str(self.id) if self.id else None,
+            "osm_id": self.osm_id,
+            "requires_maintenance": self.requires_maintenance,
+            "updated_at": self.updated_at.isoformat(),
+            "updated_by": self.updated_by,
+            "amenity_category": amenity_category_map.get(
+                self.information.get("amenity", None), None
+            ),
+        }
+
+        # Unpack the 'information' dictionary into the properties dictionary
+        if self.information and isinstance(self.information, dict):
+            properties.update(self.information)
+
         return {
             "type": "Feature",
-            "properties": {
-                "id": str(self.id) if self.id else None,
-                "osm_id": self.osm_id,
-                "information": self.information,
-                "amenity": self.amenity.to_geojson() if self.amenity else None,
-                "requires_maintenance": self.requires_maintenance,
-                "updated_at": self.updated_at.isoformat(),
-                "updated_by": self.updated_by,
-            },
+            "properties": properties,
             "geometry": json.loads(self.geometry),  # Ensure it's a valid GeoJSON object
         }
 

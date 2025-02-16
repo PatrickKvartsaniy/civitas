@@ -1,5 +1,13 @@
 mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
 
+const categoryColors = {  // Define colors for each category
+    "Emergency and Public Services": "#007bff", // Blue
+    "Food and Drink": "#ffc107", // Yellow
+    "Community and Culture": "#28a745", // Green
+    "Commercial and Financial": "#dc3545", // Red
+    "Other Amenities": "#6c757d",  // Gray
+};
+
 const map = new mapboxgl.Map({
     container: 'map',
     style: 'mapbox://styles/mapbox/streets-v12',
@@ -12,21 +20,35 @@ function addBuildingsLayer(geojson) {
         map.getSource('buildings-source').setData(geojson);
         return;
     }
-
-    map.addSource('buildings-source', { type: 'geojson', data: geojson });
+    map.addSource('buildings-source', {type: 'geojson', data: geojson});
 
     map.addLayer({
-        id: 'buildings-layer',
-        type: 'fill',
-        source: 'buildings-source',
-        paint: { 'fill-color': '#888888', 'fill-opacity': 0.5 }
-    });
+    id: 'buildings-layer',
+    type: 'fill',
+    source: 'buildings-source',
+    paint: {
+        'fill-color': [
+            'case',
+            ['has', 'amenity_category'], // Check if 'amenity_category' exists
+            [
+                'case',
+                ['has', ['get', 'amenity_category'], ['literal', categoryColors]], //Check if the amenity_category is in categoryColors
+                [
+                    'get', ['get', 'amenity_category'], ['literal', categoryColors] // Directly get the color
+                ],
+                '#888888' // Default color if no 'amenity_category' is in categoryColors
+            ],
+            '#888888' // Default color if no 'amenity_category'
+        ],
+        'fill-opacity': 0.5
+    }
+});
 
     map.addLayer({
         id: 'buildings-outline',
         type: 'line',
         source: 'buildings-source',
-        paint: { 'line-color': '#000', 'line-width': 1 }
+        paint: {'line-color': '#000', 'line-width': 1}
     });
 
     map.on('click', 'buildings-layer', (e) => {
@@ -115,17 +137,17 @@ function saveBuildingInfo(buildingId, input) {
 
         fetch(`/buildings/${buildingId}/amenity`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ information: updatedInfo })
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({information: updatedInfo})
         })
-        .then(response => {
-            if (!response.ok) throw new Error("Failed to save");
-            alert("Changes saved successfully!");
-        })
-        .catch(error => {
-            console.error("Save error:", error);
-            alert("Error saving changes.");
-        });
+            .then(response => {
+                if (!response.ok) throw new Error("Failed to save");
+                alert("Changes saved successfully!");
+            })
+            .catch(error => {
+                console.error("Save error:", error);
+                alert("Error saving changes.");
+            });
     } catch (error) {
         alert("Invalid JSON format");
     }
@@ -167,7 +189,7 @@ function showRoute(start, end) {
                         }
                     }
                 },
-                paint: { 'line-color': '#ff0000', 'line-width': 3 }
+                paint: {'line-color': '#ff0000', 'line-width': 3}
             });
         })
         .catch(error => console.error("Error fetching route:", error));
@@ -181,4 +203,29 @@ getCachedData().then(cachedData => {
         console.log("Fetching fresh data.");
         fetchAndCacheData(addBuildingsLayer);
     }
+});
+
+const legend = document.createElement('div');
+legend.className = 'legend';
+
+const title = document.createElement('h3');
+title.textContent = 'Building Categories';
+legend.appendChild(title);
+
+for (const [category, color] of Object.entries(categoryColors)) {
+    const item = document.createElement('div');
+    const key = document.createElement('span');
+    key.className = 'legend-key';
+    key.style.backgroundColor = color;
+
+    const value = document.createElement('span');
+    value.textContent = category;
+    item.appendChild(key);
+    item.appendChild(value);
+    legend.appendChild(item);
+}
+
+
+map.on('load', () => {
+    document.getElementById('map').parentNode.appendChild(legend); // Append legend to the map's parent
 });

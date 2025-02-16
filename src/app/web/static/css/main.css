@@ -49,3 +49,36 @@ button {
 button:hover {
     background-color: #0056b3;
 }
+
+.legend {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: white;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    z-index: 1000;
+}
+
+.legend h3 {
+    margin: 0 0 5px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.legend-key {
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    margin-right: 5px;
+    border-radius: 3px;
+}
+
+.legend div {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
