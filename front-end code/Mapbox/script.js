@@ -11,7 +11,6 @@ const map = new mapboxgl.Map({
   bearing: -17.6, // Rotate the map
 });
 
-// Add 3D buildings layer
 map.on('load', () => {
   map.addLayer({
     id: '3d-buildings',
