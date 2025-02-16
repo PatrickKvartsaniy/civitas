@@ -51,6 +51,7 @@ class Building(BaseModel):
     osm_id: int
     information: Dict[str, Any]
     geometry: str  # GeoJSON Polygon as string
+    amenity: Optional[Amenity] = None
     requires_maintenance: bool
     updated_at: datetime = Field(default_factory=datetime.now)
     updated_by: Optional[str] = None
@@ -62,6 +63,10 @@ class Building(BaseModel):
                 "id": str(self.id) if self.id else None,
                 "osm_id": self.osm_id,
                 "information": self.information,
+                "amenity": self.amenity.to_geojson() if self.amenity else None,
+                "requires_maintenance": self.requires_maintenance,
+                "updated_at": self.updated_at.isoformat(),
+                "updated_by": self.updated_by,
             },
             "geometry": json.loads(self.geometry),  # Ensure it's a valid GeoJSON object
         }
@@ -71,23 +76,4 @@ class BuildingUpdate(BaseModel):
     information: Dict[str, Any]
     requires_maintenance: bool
     updated_by: Optional[str]
-
-
-class BuildingWithFunction(Building):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: Optional[uuid.UUID] = None
-    osm_id: int
-    information: Dict[str, Any]
-    geometry: str
-
-    def to_geojson(self) -> Dict[str, Any]:
-        return {
-            "type": "Feature",
-            "properties": {
-                "id": str(self.id) if self.id else None,
-                "osm_id": self.osm_id,
-                "information": self.information,
-            },
-            "geometry": json.loads(self.geometry),  # Ensure it's a valid GeoJSON object
-        }
+    amenity_id: Optional[uuid.UUID]

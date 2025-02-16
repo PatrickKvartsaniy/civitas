@@ -17,3 +17,35 @@ body {
     flex: 1;
     height: 100vh;
 }
+
+.property-item {
+    margin-bottom: 10px;
+}
+
+.property-item label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.property-item input {
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3;
+}

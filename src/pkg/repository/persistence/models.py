@@ -55,6 +55,7 @@ class Amenity(Base):
     geometry = Column(Geometry("POINT"), nullable=False)  # Geometry column for points
     updated_at = Column(DateTime, default=func.now(), nullable=False)
     updated_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    building = Column(UUID(as_uuid=True), ForeignKey("buildings.id"), nullable=True)
 
     @validates("geometry")
     def validate_geometry(self, key, value):
@@ -100,6 +101,11 @@ class Building(Base):
     requires_maintenance = Column(
         Boolean, default=False, nullable=False, server_default="false"
     )
+
+    amenity = Column(UUID(as_uuid=True), ForeignKey("amenities.id"), nullable=True)
+
+    updated_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
 
     @validates("geometry")
     def validate_geometry(self, key, value):

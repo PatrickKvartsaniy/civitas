@@ -4,13 +4,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from src.pkg.models import Amenity, AmenityUpdate, BuildingUpdate
+from src.pkg.models import AmenityUpdate, BuildingUpdate
 
 api_router = APIRouter(prefix="/api")
 web_router = APIRouter(prefix="/web")
 
 templates_dir = os.path.join(os.path.dirname(__file__), "templates")
 templates = Jinja2Templates(directory=templates_dir)
+
+
+def setup_static(app: FastAPI):
+    static_dir = os.path.join(os.path.dirname(__file__), "static")
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 
 # Function for enabling CORS on web server
@@ -54,6 +59,11 @@ async def delete_building(request: Request, building_id: str):
     return {"message": "Building deleted."}
 
 
+@api_router.get("/buildings/{building_id}/amenity")
+async def get_building_amenity(request: Request, building_id: str):
+    return await request.app.state.service.get_building_amenity(building_id)
+
+
 @api_router.get("/amenities")
 async def get_amenities(request: Request):
     return await request.app.state.service.get_amenities()
@@ -84,11 +94,6 @@ async def delete_amenity(request: Request, amenity_id: str):
     return {"message": "Amenity deleted."}
 
 
-@api_router.get("/route")
-async def get_route(request: Request):
-    return await request.app.state.service.get_route()
-
-
 @web_router.get("/map", response_class=HTMLResponse)
 async def map_page(request: Request):
     return templates.TemplateResponse(
@@ -96,10 +101,6 @@ async def map_page(request: Request):
         {
             "request": request,
             "mapbox_access_token": request.app.state.cfg.MAPBOX_ACCESS_TOKEN,
+            "api_url": request.app.state.cfg.API_URL,
         },
     )
-
-
-def setup_static(app: FastAPI):
-    static_dir = os.path.join(os.path.dirname(__file__), "static")
-    app.mount("/static", StaticFiles(directory=static_dir), name="static")

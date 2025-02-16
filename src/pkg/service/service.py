@@ -50,6 +50,23 @@ class Service(ServiceInterface):
     async def update_amenity(self, amenity_id: str, update: AmenityUpdate):
         await self._repository.update_amenity(amenity_id, update)
 
+    async def get_building_amenity(self, building_id: str) -> Amenity:
+        building = await self._repository.get_building(building_id)
+        if building.amenity:
+            return building.amenity
+
+        building_amenity = await self._repository.get_building_amenity(building_id)
+        await self._repository.update_building(
+            building_id,
+            BuildingUpdate(
+                amenity_id=building_amenity.id,
+                information=building.information,
+                requires_maintenance=building.requires_maintenance,
+                updated_by=building.updated_by,
+            ),
+        )
+        return building_amenity
+
     async def _fetch_boundaries(self):
         feature = await self._terra_client.fetch_collection_feature(
             self._feature_collection_id, self._feature_id

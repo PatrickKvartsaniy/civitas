@@ -45,11 +45,24 @@ function cacheData(geojson) {
 }
 
 function fetchAndCacheData(callback) {
-    fetch(API_URL)
-        .then(response => response.json())
-        .then(geojson => {
-            cacheData(geojson);
-            callback(geojson);
+    fetch(API_URL + "/buildings")
+      .then(response => {
+            if (!response.ok) { // Check for HTTP errors (status outside 200-299)
+                throw new Error(`HTTP error! status: ${response.status}`); // Throw an error to be caught
+            }
+            return response.json(); // If response is OK, parse JSON
         })
-        .catch(error => console.error('Error fetching buildings:', error));
+      .then(geojson => {
+            if (!geojson ||!geojson.features ||!Array.isArray(geojson.features)) {
+                console.error("Invalid GeoJSON format:", geojson);
+                throw new Error("Invalid GeoJSON data"); // Throw error for invalid data
+            }
+            cacheData(geojson)
+              .then(r => console.log("Data cached"))
+              .catch(error => console.error("Error caching data:", error)); // Catch caching errors
+            callback(geojson); // Call the callback after successful fetch and cache
+        })
+      .catch(error => {
+            console.error('Error fetching or processing buildings:', error); // Catch all errors
+        });
 }

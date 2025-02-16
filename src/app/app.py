@@ -64,8 +64,10 @@ def create_app(cfg: Settings) -> App:
     )
     web.state.service = service
     web.state.cfg = cfg.WEB
+
     setup_middleware(web)
     setup_static(web)
+
     web.include_router(api_router)
     web.include_router(web_router)
 

@@ -6,6 +6,7 @@ from typing import Optional, List
 from geoalchemy2.shape import from_shape
 from shapely.geometry import shape
 from sqlalchemy.future import select
+from sqlalchemy import func
 
 from src.pkg.infrastructure.postgresql import DatabaseSessionManager
 from src.pkg.models import Amenity, Building, AmenityUpdate, BuildingUpdate
@@ -73,7 +74,7 @@ class PersistenceRepository:
                 amenity.name = new_name
                 await session.commit()
 
-    async def update_amenity(self, amenity_id: str, update: AmenityUpdate):
+    async def update_amenity(self, amenity_id: uuid.UUID, update: AmenityUpdate):
         """
         Update the metadata (information field) of an amenity.
         """
@@ -135,7 +136,7 @@ class PersistenceRepository:
                 building.information = new_metadata
                 await session.commit()
 
-    async def update_building(self, building_id: str, update: BuildingUpdate):
+    async def update_building(self, building_id: uuid.UUID, update: BuildingUpdate):
         """
         Update the maintenance status of a building.
         """
@@ -157,3 +158,43 @@ class PersistenceRepository:
             if building:
                 await session.delete(building)
                 await session.commit()
+
+    async def get_building(self, building_id: uuid.UUID) -> Building:
+        """
+        Retrieve a building by ID.
+        """
+        async with self.db.session() as session:
+            building = await session.get(Building, building_id)
+            return building.as_dto()
+
+    async def get_building_amenity(self, building_id: uuid.UUID) -> Amenity:
+        """
+        Retrieve the amenity *inside* a building using PostGIS.
+        """
+        async with self.db.session() as session:
+            amenity = (
+                await session.query(Amenity)
+                .filter(
+                    func.ST_Contains(Building.geometry, Amenity.geometry),
+                    Building.id == building_id,
+                )
+                .first()
+            )
+
+            return amenity
+
+    async def get_amenities_within_radius(
+        self, point: str, radius: int
+    ) -> List[Amenity]:
+        """
+        Retrieve all amenities within a given radius of a point.
+        """
+        async with self.db.session() as session:
+            point = func.ST_GeomFromGeoJSON(point)
+            amenities = (
+                await session.query(Amenity)
+                .filter(func.ST_DWithin(Amenity.geometry, point, radius))
+                .all()
+            )
+
+            return amenities

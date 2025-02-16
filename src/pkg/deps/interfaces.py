@@ -30,6 +30,14 @@ class RepositoryInterface(ABC):
     async def update_amenity(self, amenity_id: str, update: AmenityUpdate):
         raise NotImplementedError
 
+    @abstractmethod
+    async def get_building_amenity(self, building_id: str) -> Amenity:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_building(self, building_id: str) -> Building:
+        raise NotImplementedError
+
 
 class ServiceInterface(ABC):
     @abstractmethod
@@ -46,4 +54,8 @@ class ServiceInterface(ABC):
 
     @abstractmethod
     async def get_amenities(self) -> List[Amenity]:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_building_amenity(self, building_id: str) -> Amenity:
         raise NotImplementedError

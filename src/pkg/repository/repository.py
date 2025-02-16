@@ -1,4 +1,5 @@
 import logging
+import uuid
 from typing import List
 from aiocache import cached, caches
 
@@ -28,12 +29,12 @@ class Repository(RepositoryInterface):
 
     async def update_amenity(self, amenity_id: str, update: AmenityUpdate):
         """Update amenity and invalidate cache."""
-        await self._persistence_repo.update_amenity(amenity_id, update)
+        await self._persistence_repo.update_amenity(uuid.UUID(amenity_id), update)
         await self.invalidate_cache("cached_amenities")  # Clear cache
 
     async def update_building(self, building_id: str, update: BuildingUpdate):
         """Update building and invalidate cache."""
-        await self._persistence_repo.update_building(building_id, update)
+        await self._persistence_repo.update_building(uuid.UUID(building_id), update)
         await self.invalidate_cache("cached_buildings")  # Clear cache
 
     async def load_amenities(self, amenities: List[Amenity]):
@@ -60,6 +61,12 @@ class Repository(RepositoryInterface):
                 building.osm_id, building.information, building.geometry
             )
         await self.invalidate_cache("cached_buildings")  # Clear cache after insert
+
+    async def get_building_amenity(self, building_id: str) -> Amenity:
+        return await self._persistence_repo.get_building_amenity(uuid.UUID(building_id))
+
+    async def get_building(self, building_id: str) -> Building:
+        return await self._persistence_repo.get_building(uuid.UUID(building_id))
 
     @staticmethod
     async def invalidate_cache(key: str):
