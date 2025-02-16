@@ -139,13 +139,8 @@ class Building(Base):
             "requires_maintenance": self.requires_maintenance,
             "updated_at": self.updated_at,
             "updated_by": self.updated_by,
+            "amenity": self.amenity_rel.as_dto() if self.amenity_rel else None,
         }
-
-        if self.amenity_rel:  # Check if amenity_rel is not None
-            as_dict["amenity"] = self.amenity_rel.as_dto()  # Convert to DTO
-        else:
-            as_dict["amenity"] = None  # Or a default value if appropriate
-
         return BuildingSchema.model_validate(as_dict)
 
 

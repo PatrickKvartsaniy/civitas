@@ -38,6 +38,10 @@ class RepositoryInterface(ABC):
     async def get_building(self, building_id: str) -> Building:
         raise NotImplementedError
 
+    @abstractmethod
+    async def assign_closest_amenities(self):
+        raise NotImplementedError
+
 
 class ServiceInterface(ABC):
     @abstractmethod
@@ -46,6 +50,10 @@ class ServiceInterface(ABC):
 
     @abstractmethod
     async def sync_amenities(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    async def assign_closest_amenities(self):
         raise NotImplementedError
 
     @abstractmethod

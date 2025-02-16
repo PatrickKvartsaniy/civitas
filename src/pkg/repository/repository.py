@@ -68,6 +68,9 @@ class Repository(RepositoryInterface):
     async def get_building(self, building_id: str) -> Building:
         return await self._persistence_repo.get_building(uuid.UUID(building_id))
 
+    async def assign_closest_amenities(self):
+        return await self._persistence_repo.assign_closest_amenities()
+
     @staticmethod
     async def invalidate_cache(key: str):
         """Invalidate cache when data changes."""

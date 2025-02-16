@@ -8,12 +8,17 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     AsyncConnection,
     AsyncSession,
+    AsyncAttrs,
 )
 from sqlalchemy.ext.declarative import declarative_base
 
 ALEMBIC_CONFIG_PATH = "alembic.ini"
 
-Base = declarative_base()
+_Base = declarative_base()
+
+
+class Base(_Base, AsyncAttrs):
+    __abstract__ = True
 
 
 class DatabaseSessionManager:

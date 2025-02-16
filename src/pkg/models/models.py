@@ -54,6 +54,7 @@ class Building(BaseModel):
     information: Dict[str, Any]
     geometry: str  # GeoJSON Polygon as string
     requires_maintenance: bool
+    amenity: Optional[Amenity] = None
     updated_at: datetime = Field(default_factory=datetime.now)
     updated_by: Optional[str] = None
 
@@ -66,7 +67,7 @@ class Building(BaseModel):
             "updated_at": self.updated_at.isoformat(),
             "updated_by": self.updated_by,
             "amenity_category": amenity_category_map.get(
-                self.information.get("amenity", None), None
+                self.amenity.amenity_type, "Residential"
             ),
         }
 

@@ -37,6 +37,12 @@ class Service(ServiceInterface):
         except Exception as e:
             print(f"syncing amenities failed. Error: {e}")
 
+    async def assign_closest_amenities(self):
+        try:
+            await self._repository.assign_closest_amenities()
+        except Exception as e:
+            print(f"assigning closest amenities failed. Error: {e}")
+
     async def get_buildings(self) -> List[Building]:
         await self._fetch_boundaries()
         return await self._repository.get_buildings()

@@ -6,7 +6,8 @@ from typing import Optional, List
 from geoalchemy2.shape import from_shape
 from shapely.geometry import shape
 from sqlalchemy.future import select
-from sqlalchemy import func
+from sqlalchemy import func, update
+from sqlalchemy.orm import aliased
 
 from src.pkg.infrastructure.postgresql import DatabaseSessionManager
 from src.pkg.models import Amenity, Building, AmenityUpdate, BuildingUpdate
@@ -74,19 +75,21 @@ class PersistenceRepository:
                 amenity.name = new_name
                 await session.commit()
 
-    async def update_amenity(self, amenity_id: uuid.UUID, update: AmenityUpdate):
+    async def update_amenity(
+        self, amenity_id: uuid.UUID, amenity_update: AmenityUpdate
+    ):
         """
         Update the metadata (information field) of an amenity.
         """
         async with self.db.session() as session:
             amenity = await session.get(Amenity, amenity_id)
             if amenity:
-                amenity.name = update.name
-                amenity.amenity_type = update.amenity_type
-                amenity.address = update.address
-                amenity.opening_hours = update.opening_hours
+                amenity.name = amenity_update.name
+                amenity.amenity_type = amenity_update.amenity_type
+                amenity.address = amenity_update.amenity_update
+                amenity.opening_hours = amenity_update.opening_hours
                 amenity.updated_at = datetime.now()
-                amenity.updated_by = update.updated_by
+                amenity.updated_by = amenity_update.updated_by
                 await session.commit()
 
     async def delete_amenity(self, amenity_id: uuid.UUID):
@@ -116,12 +119,19 @@ class PersistenceRepository:
 
     async def get_buildings(self) -> List[Building]:
         async with self.db.session() as session:
-            result = await session.execute(select(BuildingModel))  # Query ORM Model
-            buildings_orm = result.scalars().all()  # Get list of ORM objects
+            # Query buildings with their related amenities
+            result = await session.execute(
+                select(BuildingModel).outerjoin(
+                    AmenityModel, BuildingModel.amenity == AmenityModel.id
+                )  # Join on amenity
+            )
+            buildings_orm = result.scalars().all()  # Fetch all buildings
 
             buildings_schema = []
             for building_orm in buildings_orm:
+                await session.refresh(building_orm, ["amenity_rel"])
                 buildings_schema.append(building_orm.as_dto())
+
             return buildings_schema
 
     async def update_building_metadata(
@@ -136,17 +146,19 @@ class PersistenceRepository:
                 building.information = new_metadata
                 await session.commit()
 
-    async def update_building(self, building_id: uuid.UUID, update: BuildingUpdate):
+    async def update_building(
+        self, building_id: uuid.UUID, building_update: BuildingUpdate
+    ):
         """
         Update the maintenance status of a building.
         """
         async with self.db.session() as session:
             building = await session.get(Building, building_id)
             if building:
-                building.requires_maintenance = update.requires_maintenance
-                building.information = update.information
+                building.requires_maintenance = building_update.requires_maintenance
+                building.information = building_update.information
                 building.updated_at = datetime.now()
-                building.updated_by = update.updated_by
+                building.updated_by = building_update.updated_by
                 await session.commit()
 
     async def delete_building(self, building_id: uuid.UUID):
@@ -181,7 +193,7 @@ class PersistenceRepository:
             result = await session.execute(
                 select(Amenity)
                 .join(Building, func.ST_Contains(Building.geometry, Amenity.geometry))
-                .filter(Building.id == building_id)
+                .filter(BuildingModel.id == building_id)
             )
             return result.scalars().first()  # Get the first matching amenity
 
@@ -200,3 +212,52 @@ class PersistenceRepository:
             )
 
             return amenities
+
+    async def assign_closest_amenities(self):
+        async with self.db.session() as session:
+            # Alias for the Amenity model
+            closest_amenity = aliased(AmenityModel)
+
+            # Subquery to find the closest amenity for each building
+            subquery = (
+                select(
+                    BuildingModel.id.label("building_id"),
+                    closest_amenity.id.label("amenity_id"),
+                    func.ST_Distance(
+                        BuildingModel.geometry, closest_amenity.geometry
+                    ).label("distance"),
+                    func.row_number()
+                    .over(
+                        partition_by=closest_amenity.id,
+                        order_by=func.ST_Distance(
+                            BuildingModel.geometry, closest_amenity.geometry
+                        ),
+                    )
+                    .label("rank"),
+                )
+                .join(
+                    closest_amenity,
+                    func.ST_DWithin(
+                        BuildingModel.geometry, closest_amenity.geometry, 1
+                    ),
+                )
+                .subquery()
+            )
+
+            # Filter only the top-ranked closest amenity per building
+            ranked_amenities = (
+                select(subquery.c.building_id, subquery.c.amenity_id)
+                .where(subquery.c.rank == 1)
+                .subquery()
+            )
+
+            # Update the buildings table with the closest unique amenity
+            update_stmt = (
+                update(BuildingModel)
+                .values(amenity=ranked_amenities.c.amenity_id)
+                .where(BuildingModel.id == ranked_amenities.c.building_id)
+            )
+
+            # Execute the update
+            await session.execute(update_stmt)
+            await session.commit()
