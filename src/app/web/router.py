@@ -37,18 +37,9 @@ async def get_buildings(request: Request):
 @api_router.get("/buildings/geojson")
 async def get_buildings_geojson(request: Request):
     buildings = await request.app.state.service.get_buildings()
-    print(len(buildings))
-    parsed = []
-    count = 0
-    for building in buildings:
-        parsed_building = building.to_geojson()
-        if parsed_building["properties"].get("amenity_category") is not None:
-            count += 1
-        parsed.append(parsed_building)
-    print(f"Total amenities: {count}")
     return {
         "type": "FeatureCollection",
-        "features": parsed,
+        "features": [b.to_geojson() for b in buildings],
     }
 
 

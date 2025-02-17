@@ -5,7 +5,7 @@ const categoryColors = {  // Define colors for each category
     "Food and Drink": "#ffc107", // Yellow
     "Community and Culture": "#28a745", // Green
     "Commercial and Financial": "#dc3545", // Red
-    "Other Amenities": "#6c757d",  // Gray
+    "Residential": "#6c757d",  // Gray
 };
 
 const map = new mapboxgl.Map({
