@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field, ConfigDict
 from shapely.wkt import loads
 from shapely.geometry import mapping
 
-from .literals import amenity_category_map
+from .enums import amenity_category_map
 
 
 class Amenity(BaseModel):
@@ -113,5 +113,5 @@ class RouteGeometryDistance(BaseModel):
 
 
 class ClosestAmenityResponse(BaseModel):
-    amenity: Amenity
-    route: RouteGeometryDistance
+    amenity: Optional[Amenity]
+    route: Optional[RouteGeometryDistance]

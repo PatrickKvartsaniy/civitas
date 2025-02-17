@@ -5,7 +5,7 @@ from aiocache import cached, caches
 
 from src.pkg.deps.interfaces import RepositoryInterface
 from src.pkg.models import Amenity, Building, BuildingUpdate, AmenityUpdate
-from src.pkg.models.literals import AmenityCategory
+from src.pkg.models.enums import AmenityCategory
 from src.pkg.repository.persistence.queries import PersistenceRepository
 
 logger = logging.getLogger(__name__)
@@ -63,7 +63,7 @@ class Repository(RepositoryInterface):
     async def get_closest_amenity(
         self, building_id: str, category: AmenityCategory
     ) -> Amenity:
-        return await self._persistence_repo.find_closest_amenity_by_type(
+        return await self._persistence_repo.find_closest_amenity_by_category(
             uuid.UUID(building_id), category
         )
 

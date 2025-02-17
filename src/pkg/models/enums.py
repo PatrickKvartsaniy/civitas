@@ -1,12 +1,14 @@
-from typing import Literal, Dict
+from enum import Enum
+from typing import Dict
 
-AmenityCategory = Literal[
-    "Emergency and Public Services",
-    "Commercial and Financial",
-    "Food and Drink",
-    "Community and Culture",
-    "Other Amenities",
-]
+
+class AmenityCategory(str, Enum):
+    EMERGENCY_AND_PUBLIC_SERVICES = "Emergency and Public Services"
+    COMMERCIAL_AND_FINANCIAL = "Commercial and Financial"
+    FOOD_AND_DRINK = "Food and Drink"
+    COMMUNITY_AND_CULTURE = "Community and Culture"
+    OTHER_AMENITIES = "Other Amenities"
+
 
 amenity_category_map: Dict[str, AmenityCategory] = {
     "animal_shelter": "Emergency and Public Services",

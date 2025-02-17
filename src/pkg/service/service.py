@@ -10,7 +10,7 @@ from src.pkg.models import (
 )
 from src.pkg.adapters.terra import TerraClient
 from src.pkg.adapters.overpass import OverpassClient
-from src.pkg.models.literals import AmenityCategory
+from src.pkg.models.enums import AmenityCategory, amenity_category_map
 
 
 class Service(ServiceInterface):
@@ -84,9 +84,12 @@ class Service(ServiceInterface):
         self, building_id: str, category: str
     ) -> ClosestAmenityResponse:
         building = await self._repository.get_building(building_id)
+
         amenity = await self._repository.get_closest_amenity(
             building_id, AmenityCategory(category)
         )
+        if not amenity:
+            return ClosestAmenityResponse(amenity=None, route=None)
         route = await self._terra_client.get_route(
             [
                 (

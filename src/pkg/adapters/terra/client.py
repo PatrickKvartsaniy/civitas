@@ -1,3 +1,5 @@
+import json
+
 import aiohttp
 from typing import Dict, Any, Optional, List, Tuple
 
@@ -72,17 +74,26 @@ class Client:
         :return: Route data as a dictionary.
         """
         await self._ensure_token()
-        params = {
-            "coordinates": ",".join(f"{lon},{lat}" for lon, lat in coordinates),
+
+        json_payload = {
+            "coordinates": coordinates,  # Send as JSON array
             "profile": profile,
         }
 
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 f"{self._base_url}/routing/route",
-                headers={"Authorization": f"Bearer {self._token}"},
-                params=params,
+                headers={
+                    "Authorization": f"Bearer {self._token}",
+                    "Content-Type": "application/json",
+                },
+                json=json_payload,
             ) as response:
                 if response.status != 200:
                     raise Exception(f"Failed to fetch route: {await response.text()}")
-                return await response.json()
+                data = await response.json()
+                return RouteGeometryDistance(
+                    geometry=json.dumps(data.get("geometry_line")),
+                    distance=data.get("distance"),
+                    duration=data.get("duration"),
+                )

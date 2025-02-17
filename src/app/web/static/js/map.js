@@ -6,39 +6,39 @@ const map = new mapboxgl.Map({
 });
 
 function findClosestAmenity(properties, category) {
-    const lat = properties.latitude || 35.9052445;
-    const lon = properties.longitude || 14.4551924;
-
-    fetch(API_URL + "/buildings/&category=${encodeURIComponent(category)}")
+    fetch(API_URL + `/buildings/${properties.id}/closest/${encodeURIComponent(category)}`)
         .then(response => response.json())
         .then(data => {
-            alert(`Closest ${category}: ${data.name}, Distance: ${data.distance}m, Time: ${data.time}min`);
-            showRoute([lon, lat], [data.lon, data.lat]);
+            console.log(data)
+            alert(`Closest ${category}: ${data.amenity.name}, Distance: ${data.route.distance}m, Time: ${data.route.duration}min walking`);
+            showRoute(data.route.geometry);
         })
         .catch(error => console.error(`Error fetching closest ${category}:`, error));
 }
 
-function showRoute(start, end) {
-    fetch(`https://your-api.com/route?start=${start}&end=${end}`)
-        .then(response => response.json())
-        .then(data => {
-            map.addLayer({
-                id: 'route',
-                type: 'line',
-                source: {
-                    type: 'geojson',
-                    data: {
-                        type: 'Feature',
-                        geometry: {
-                            type: 'LineString',
-                            coordinates: data.route
-                        }
-                    }
-                },
-                paint: {'line-color': '#ff0000', 'line-width': 3}
-            });
-        })
-        .catch(error => console.error("Error fetching route:", error));
+function showRoute(geometry) {
+    if (typeof geometry === "string") {
+        geometry = JSON.parse(geometry);
+    }
+    if (map.getLayer('route')) {
+        map.removeLayer('route');
+        map.removeSource('route');
+    }
+
+    map.addSource('route', {
+        type: 'geojson',
+        data: {
+            type: 'Feature',
+            geometry: geometry
+        }
+    });
+
+    map.addLayer({
+        id: 'route',
+        type: 'line',
+        source: 'route',
+        paint: { 'line-color': '#ff0000', 'line-width': 3 }
+    });
 }
 
 getCachedData().then(cachedData => {

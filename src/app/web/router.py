@@ -64,7 +64,7 @@ async def get_building_amenity(request: Request, building_id: str):
     return await request.app.state.service.get_building_amenity(building_id)
 
 
-@api_router.get("buildings/{building_id}/closest")
+@api_router.get("/buildings/{building_id}/closest/{category}")
 async def get_closest_amenity(request: Request, building_id: str, category: str):
     return await request.app.state.service.get_closest_amenity(building_id, category)
 

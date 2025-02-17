@@ -9,7 +9,7 @@ from src.pkg.models import (
     AmenityUpdate,
     ClosestAmenityResponse,
 )
-from src.pkg.models.literals import AmenityCategory
+from src.pkg.models.enums import AmenityCategory
 
 
 class RepositoryInterface(ABC):

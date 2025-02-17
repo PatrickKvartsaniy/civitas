@@ -220,8 +220,10 @@ class PersistenceRepository:
         """
         async with self.db.session() as session:
             building_orm = await session.get(
-                BuildingModel, building_id
-            )  # Get ORM object
+                BuildingModel,
+                building_id,
+                options=[orm.joinedload(BuildingModel.amenity_rel)],  # Eager load
+            )
             if building_orm:  # Check if the building exists
                 return building_orm.as_dto()  # Convert to DTO before returning
             return None
@@ -304,10 +306,10 @@ class PersistenceRepository:
             await session.execute(update_stmt)
             await session.commit()
 
-    async def find_closest_amenity_by_type(
+    async def find_closest_amenity_by_category(
         self,
         building_id: uuid.UUID,
-        amenity_type: AmenityCategory,
+        amenity_category: AmenityCategory,
         range_meters: int = 5000,
     ) -> Optional[Amenity]:
         """
@@ -332,9 +334,7 @@ class PersistenceRepository:
                     ),
                 )
                 .filter(BuildingModel.id == building_id)
-                .filter(
-                    closest_amenity.amenity_type == str(amenity_type)
-                )  # Filter by amenity type
+                .filter(closest_amenity.amenity_category == amenity_category)
                 .order_by(
                     func.ST_Distance(BuildingModel.geometry, closest_amenity.geometry)
                 )  # Order by distance

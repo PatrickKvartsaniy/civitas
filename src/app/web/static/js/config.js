@@ -6,4 +6,5 @@ const categoryColors = {  // Define colors for each category
     "Community and Culture": "#28a745", // Green
     "Commercial and Financial": "#dc3545", // Red
     "Residential": "#6c757d",  // Gray
+    "Other Amenities": "#17a2b8" // Cyan
 };
