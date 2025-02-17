@@ -2,7 +2,14 @@ from abc import ABC, abstractmethod
 
 from typing import List
 
-from src.pkg.models import Amenity, Building, BuildingUpdate, AmenityUpdate
+from src.pkg.models import (
+    Amenity,
+    Building,
+    BuildingUpdate,
+    AmenityUpdate,
+    ClosestAmenityResponse,
+)
+from src.pkg.models.literals import AmenityCategory
 
 
 class RepositoryInterface(ABC):
@@ -42,6 +49,12 @@ class RepositoryInterface(ABC):
     async def assign_closest_amenities(self):
         raise NotImplementedError
 
+    @abstractmethod
+    async def get_closest_amenity(
+        self, building_id: str, category: AmenityCategory
+    ) -> Amenity:
+        raise NotImplementedError
+
 
 class ServiceInterface(ABC):
     @abstractmethod
@@ -66,4 +79,10 @@ class ServiceInterface(ABC):
 
     @abstractmethod
     async def get_building_amenity(self, building_id: str) -> Amenity:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_closest_amenity(
+        self, building_id: str, category: str
+    ) -> ClosestAmenityResponse:
         raise NotImplementedError

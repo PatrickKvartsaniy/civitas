@@ -1,4 +1,14 @@
-amenity_category_map = {
+from typing import Literal, Dict
+
+AmenityCategory = Literal[
+    "Emergency and Public Services",
+    "Commercial and Financial",
+    "Food and Drink",
+    "Community and Culture",
+    "Other Amenities",
+]
+
+amenity_category_map: Dict[str, AmenityCategory] = {
     "animal_shelter": "Emergency and Public Services",
     "bank": "Commercial and Financial",
     "bar": "Food and Drink",

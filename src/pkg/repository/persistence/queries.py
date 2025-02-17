@@ -1,17 +1,20 @@
-import json
 import uuid
 from datetime import datetime
 from typing import Optional, List
 
-from geoalchemy2.shape import from_shape
-from shapely.geometry import shape
 from sqlalchemy.future import select
 from sqlalchemy import func, update
 from sqlalchemy.orm import aliased
 from sqlalchemy.util.preloaded import orm
 
 from src.pkg.infrastructure.postgresql import DatabaseSessionManager
-from src.pkg.models import Amenity, Building, AmenityUpdate, BuildingUpdate
+from src.pkg.models import (
+    Amenity,
+    Building,
+    AmenityUpdate,
+    BuildingUpdate,
+    AmenityCategory,
+)
 
 from .models import (
     Amenity as AmenityModel,
@@ -25,33 +28,49 @@ class PersistenceRepository:
 
     async def load_amenity(
         self,
-        osm_id: int,
-        name: Optional[str],
-        amenity_type: Optional[str],
-        address: Optional[str],
-        opening_hours: Optional[str],
-        geometry: str,
-        updated_at: datetime,
-        updated_by: Optional[uuid.UUID] = None,
+        amenity: Amenity,
     ):
         """
         Insert or update an amenity into the database.
         """
         async with self.db.session() as session:
-            geo = from_shape(shape(json.loads(geometry)), srid=4326)
             amenity = AmenityModel(
-                id=uuid.uuid4(),
-                osm_id=osm_id,
-                name=name,
-                amenity_type=amenity_type,
-                address=address,
-                opening_hours=opening_hours,
-                geometry=geo,
-                updated_at=updated_at,
-                updated_by=updated_by,
+                osm_id=amenity.osm_id,
+                name=amenity.name,
+                amenity_type=amenity.amenity_type,
+                amenity_category=amenity.amenity_category,
+                address=amenity.address,
+                opening_hours=amenity.opening_hours,
+                geometry=amenity.geometry,
+                updated_at=amenity.updated_at,
+                updated_by=amenity.updated_by,
             )
             session.add(amenity)
             await session.commit()
+
+    async def load_amenities(self, amenities: List[Amenity]):
+        """Load multiple amenities into DB."""
+        if not amenities:  # Avoid unnecessary DB calls if list is empty
+            return
+
+        async with self.db.session() as session:
+            async with session.begin():
+                session.add_all(
+                    [
+                        AmenityModel(
+                            osm_id=a.osm_id,
+                            name=a.name,
+                            amenity_type=a.amenity_type,
+                            amenity_category=a.amenity_category,
+                            address=a.address,
+                            opening_hours=a.opening_hours,
+                            geometry=a.geometry,
+                            updated_at=a.updated_at,
+                            updated_by=a.updated_by,
+                        )
+                        for a in amenities
+                    ]
+                )
 
     async def get_amenities(self) -> List[Amenity]:
         """
@@ -103,20 +122,42 @@ class PersistenceRepository:
                 await session.delete(amenity)
                 await session.commit()
 
-    async def load_building(self, osm_id: int, metadata: dict, geometry: str):
+    async def load_building(self, building: Building):
         """
         Insert a new building into the database.
         """
         async with self.db.session() as session:
-            geo = from_shape(shape(json.loads(geometry)), srid=4326)
             building = BuildingModel(
-                id=uuid.uuid4(),
-                osm_id=osm_id,
-                information=metadata,
-                geometry=geo,
+                osm_id=building.osm_id,
+                information=building.information,
+                geometry=building.geometry,
+                requires_maintenance=building.requires_maintenance,
+                updated_at=building.updated_at,
+                updated_by=building.updated_by,
             )
             session.add(building)
             await session.commit()
+
+    async def load_buildings(self, buildings: List[Building]):
+        """Load multiple buildings into DB."""
+        if not buildings:  # Avoid unnecessary DB calls if list is empty
+            return
+
+        async with self.db.session() as session:
+            async with session.begin():  # Ensures rollback on failure
+                session.add_all(
+                    [
+                        BuildingModel(
+                            osm_id=b.osm_id,
+                            information=b.information,
+                            geometry=b.geometry,
+                            requires_maintenance=b.requires_maintenance,
+                            updated_at=b.updated_at,
+                            updated_by=b.updated_by,
+                        )
+                        for b in buildings
+                    ]
+                )
 
     async def get_buildings(self) -> List[Building]:
         async with self.db.session() as session:
@@ -130,9 +171,7 @@ class PersistenceRepository:
             )
 
             buildings_orm = result.scalars().all()
-            buildings_schema = [
-                building_orm.as_dto() for building_orm in buildings_orm
-            ]  # List comprehension
+            buildings_schema = [building_orm.as_dto() for building_orm in buildings_orm]
 
             return buildings_schema
 
@@ -217,10 +256,11 @@ class PersistenceRepository:
 
     async def assign_closest_amenities(self):
         async with self.db.session() as session:
-            # Alias for the Amenity model
             closest_amenity = aliased(AmenityModel)
 
-            # Subquery to find the closest amenity for each building
+            SEARCH_RADIUS = 2  # in meters
+
+            # Find the closest amenity for each building
             subquery = (
                 select(
                     BuildingModel.id.label("building_id"),
@@ -230,7 +270,7 @@ class PersistenceRepository:
                     ).label("distance"),
                     func.row_number()
                     .over(
-                        partition_by=closest_amenity.id,
+                        partition_by=BuildingModel.id,  # Rank per building (fixing the previous issue)
                         order_by=func.ST_Distance(
                             BuildingModel.geometry, closest_amenity.geometry
                         ),
@@ -240,26 +280,67 @@ class PersistenceRepository:
                 .join(
                     closest_amenity,
                     func.ST_DWithin(
-                        BuildingModel.geometry, closest_amenity.geometry, 1
+                        BuildingModel.geometry, closest_amenity.geometry, SEARCH_RADIUS
                     ),
                 )
                 .subquery()
             )
 
-            # Filter only the top-ranked closest amenity per building
-            ranked_amenities = (
+            # Select only the top-ranked closest amenity per building
+            ranked_amenities_cte = (
                 select(subquery.c.building_id, subquery.c.amenity_id)
                 .where(subquery.c.rank == 1)
-                .subquery()
+                .cte("ranked_amenities")
             )
 
-            # Update the buildings table with the closest unique amenity
+            # Update the buildings table
             update_stmt = (
                 update(BuildingModel)
-                .values(amenity=ranked_amenities.c.amenity_id)
-                .where(BuildingModel.id == ranked_amenities.c.building_id)
+                .values(amenity=ranked_amenities_cte.c.amenity_id)
+                .where(BuildingModel.id == ranked_amenities_cte.c.building_id)
             )
 
             # Execute the update
             await session.execute(update_stmt)
             await session.commit()
+
+    async def find_closest_amenity_by_type(
+        self,
+        building_id: uuid.UUID,
+        amenity_type: AmenityCategory,
+        range_meters: int = 5000,
+    ) -> Optional[Amenity]:
+        """
+        Find the closest amenity of a specific type to a building.
+        """
+        async with self.db.session() as session:
+            building = await session.get(
+                BuildingModel, building_id
+            )  # Fetch the building
+            if not building:
+                return None  # Building not found
+
+            closest_amenity = aliased(AmenityModel)  # Alias for AmenityModel
+
+            # Query to find the closest amenity of the specified type
+            result = await session.execute(
+                select(closest_amenity)
+                .join(
+                    BuildingModel,
+                    func.ST_DWithin(
+                        BuildingModel.geometry, closest_amenity.geometry, range_meters
+                    ),
+                )
+                .filter(BuildingModel.id == building_id)
+                .filter(
+                    closest_amenity.amenity_type == str(amenity_type)
+                )  # Filter by amenity type
+                .order_by(
+                    func.ST_Distance(BuildingModel.geometry, closest_amenity.geometry)
+                )  # Order by distance
+            )
+
+            amenity = result.scalars().first()
+            if amenity:
+                return amenity.as_dto()  # Return the DTO
+            return None

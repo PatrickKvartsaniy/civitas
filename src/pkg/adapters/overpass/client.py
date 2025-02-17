@@ -1,4 +1,5 @@
-from typing import List, Dict
+import random
+from typing import List
 
 import overpy
 
@@ -38,6 +39,7 @@ class Client:
                 osm_id=way.id,
                 information=way.tags,
                 geometry=to_geojson(Polygon(nodes)),
+                requires_maintenance=get_random_bool(),
             )
             buildings.append(building)
         return buildings
@@ -72,6 +74,12 @@ class Client:
                 opening_hours=tags.get("opening_hours"),
                 geometry=to_geojson(Point(float(node.lon), float(node.lat))),
             )
+            amenity.populate_category()
             amenities.append(amenity)
 
         return amenities
+
+
+def get_random_bool():
+    """Returns a random boolean (True or False)."""
+    return random.randint(0, 1) == 1

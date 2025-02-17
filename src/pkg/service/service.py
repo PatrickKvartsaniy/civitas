@@ -1,9 +1,16 @@
 from typing import List
 
 from src.pkg.deps.interfaces import ServiceInterface, RepositoryInterface
-from src.pkg.models import Building, Amenity, BuildingUpdate, AmenityUpdate
+from src.pkg.models import (
+    Building,
+    Amenity,
+    BuildingUpdate,
+    AmenityUpdate,
+    ClosestAmenityResponse,
+)
 from src.pkg.adapters.terra import TerraClient
 from src.pkg.adapters.overpass import OverpassClient
+from src.pkg.models.literals import AmenityCategory
 
 
 class Service(ServiceInterface):
@@ -72,6 +79,24 @@ class Service(ServiceInterface):
             ),
         )
         return building_amenity
+
+    async def get_closest_amenity(
+        self, building_id: str, category: str
+    ) -> ClosestAmenityResponse:
+        building = await self._repository.get_building(building_id)
+        amenity = await self._repository.get_closest_amenity(
+            building_id, AmenityCategory(category)
+        )
+        route = await self._terra_client.get_route(
+            [
+                (
+                    building.shapely_geometry.centroid.x,
+                    building.shapely_geometry.centroid.y,
+                ),
+                (amenity.shapely_geometry.x, amenity.shapely_geometry.y),
+            ]
+        )
+        return ClosestAmenityResponse(amenity=amenity, route=route)
 
     async def _fetch_boundaries(self):
         feature = await self._terra_client.fetch_collection_feature(

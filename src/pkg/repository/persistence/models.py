@@ -50,6 +50,7 @@ class Amenity(Base):
     osm_id = Column(BigInteger, unique=True, nullable=False)
     name = Column(String, nullable=True)
     amenity_type = Column(String, nullable=True)
+    amenity_category = Column(String, nullable=True)
     address = Column(String, nullable=True)
     opening_hours = Column(String, nullable=True)
     geometry = Column(Geometry("POINT", srid=4326), nullable=False)
@@ -79,9 +80,10 @@ class Amenity(Base):
             "osm_id": self.osm_id,
             "name": self.name,
             "amenity_type": self.amenity_type,
+            "amenity_category": self.amenity_category,
             "address": self.address,
             "opening_hours": self.opening_hours,
-            "geometry": geometry_to_geojson(self.geometry),
+            "geometry": shapely.from_wkb(self.geometry.data).wkt,
             "updated_at": self.updated_at,
             "updated_by": self.updated_by,
         }
@@ -135,21 +137,10 @@ class Building(Base):
             "id": self.id,
             "osm_id": self.osm_id,
             "information": self.information,
-            "geometry": geometry_to_geojson(self.geometry),
+            "geometry": shapely.from_wkb(self.geometry.data).wkt,
             "requires_maintenance": self.requires_maintenance,
             "updated_at": self.updated_at,
             "updated_by": self.updated_by,
             "amenity": self.amenity_rel.as_dto() if self.amenity_rel else None,
         }
         return BuildingSchema.model_validate(as_dict)
-
-
-def geometry_to_geojson(geometry) -> str:
-    """
-    Convert a WKBElement geometry to a GeoJSON string. Handles None geometries.
-    """
-    try:
-        geom = mapping(shapely.from_wkb(str(geometry)))  # Convert to bytes first
-        return json.dumps(geom)
-    except Exception as e:  # Catch any conversion errors
-        raise f"Error converting geometry to GeoJSON: {e}"

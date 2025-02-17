@@ -39,7 +39,7 @@ async def get_buildings_geojson(request: Request):
     buildings = await request.app.state.service.get_buildings()
     return {
         "type": "FeatureCollection",
-        "features": [b.to_geojson() for b in buildings],
+        "features": [b.as_geojson() for b in buildings],
     }
 
 
@@ -64,6 +64,11 @@ async def get_building_amenity(request: Request, building_id: str):
     return await request.app.state.service.get_building_amenity(building_id)
 
 
+@api_router.get("buildings/{building_id}/closest")
+async def get_closest_amenity(request: Request, building_id: str, category: str):
+    return await request.app.state.service.get_closest_amenity(building_id, category)
+
+
 @api_router.get("/amenities")
 async def get_amenities(request: Request):
     return await request.app.state.service.get_amenities()
@@ -74,7 +79,7 @@ async def get_amenities_geojson(request: Request):
     amenities = await request.app.state.service.get_amenities()
     return {
         "type": "FeatureCollection",
-        "features": [a.to_geojson() for a in amenities],
+        "features": [a.as_geojson() for a in amenities],
     }
 
 

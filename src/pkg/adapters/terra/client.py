@@ -1,5 +1,7 @@
 import aiohttp
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List, Tuple
+
+from src.pkg.models import RouteGeometryDistance
 
 
 class Client:
@@ -58,3 +60,29 @@ class Client:
             ) as response:
                 wrapped_feature = await response.json()
                 return wrapped_feature.get("feature")
+
+    async def get_route(
+        self, coordinates: List[Tuple[float, float]], profile: str = "foot-walking"
+    ) -> RouteGeometryDistance:
+        """
+        Fetch a route from the routing service.
+
+        :param coordinates: List of coordinate pairs (longitude, latitude).
+        :param profile: Routing profile (e.g., "driving-car", "foot-walking", "cycling-regular").
+        :return: Route data as a dictionary.
+        """
+        await self._ensure_token()
+        params = {
+            "coordinates": ",".join(f"{lon},{lat}" for lon, lat in coordinates),
+            "profile": profile,
+        }
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                f"{self._base_url}/routing/route",
+                headers={"Authorization": f"Bearer {self._token}"},
+                params=params,
+            ) as response:
+                if response.status != 200:
+                    raise Exception(f"Failed to fetch route: {await response.text()}")
+                return await response.json()
