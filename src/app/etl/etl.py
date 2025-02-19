@@ -1,4 +1,8 @@
+import logging
+
 from src.pkg.deps.interfaces import ServiceInterface
+
+logger = logging.getLogger(__name__)
 
 
 class ETL:
@@ -10,6 +14,12 @@ class ETL:
         await self.sync()
 
     async def sync(self):
-        await self.service.sync_buildings()
-        await self.service.sync_amenities()
-        await self.service.assign_closest_amenities()
+        if not await self.service.sync_buildings():  # <1>
+            logger.error("Failed to sync buildings. Exiting...")
+            return
+        if not await self.service.sync_amenities():  # <2>
+            logger.error("Failed to sync amenities. Exiting...")
+            return
+        if not await self.service.assign_closest_amenities():  # <3>
+            logger.error("Failed to assign closest amenities. Exiting...")
+            return

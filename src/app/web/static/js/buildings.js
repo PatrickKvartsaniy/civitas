@@ -30,7 +30,7 @@ function addBuildingsLayer(geojson) {
                     defaultColor
                 ]
             ],
-            'fill-extrusion-height': ['get', 'height'], // Use building height from GeoJSON
+            'fill-extrusion-height': ['get', 'height'],
             'fill-extrusion-base': 0,
             'fill-extrusion-opacity': 0.8
         }
@@ -53,8 +53,10 @@ function addBuildingsLayer(geojson) {
 
 
 function selectBuilding(buildingId) {
+    if (!map.getLayer('buildings-layer')) return;
+
     selectedBuildingId = buildingId;
-    map.setPaintProperty('buildings-layer', 'fill-color', [
+    map.setPaintProperty('buildings-layer', 'fill-extrusion-color', [
         'case',
         ['==', ['get', 'id'], ['literal', selectedBuildingId]], selectedBuildingColor, // Highlight selected
         ['match',

@@ -1,4 +1,6 @@
-from typing import List, Optional
+from typing import List, Optional, Any, Coroutine
+
+from sqlalchemy import Boolean
 
 from src.pkg.deps.interfaces import ServiceInterface, RepositoryInterface
 from src.pkg.models import (
@@ -28,27 +30,36 @@ class Service(ServiceInterface):
         self._feature_collection_id = feature_collection_id
         self._feature_id = feature_id
 
-    async def sync_buildings(self):
+    async def sync_buildings(self) -> bool:
+        success = False
         try:
             boundaries = await self._fetch_boundaries()
             buildings = await self._overpass_client.extract_buildings(boundaries)
             await self._repository.load_buildings(buildings)
+            success = True
         except Exception as e:
             print(f"syncing buildings failed. Error: {e}")
+        return success
 
-    async def sync_amenities(self):
+    async def sync_amenities(self) -> bool:
+        success = False
         try:
             boundaries = await self._fetch_boundaries()
             amenities = await self._overpass_client.extract_amenities(boundaries)
             await self._repository.load_amenities(amenities)
+            success = True
         except Exception as e:
             print(f"syncing amenities failed. Error: {e}")
+        return success
 
-    async def assign_closest_amenities(self):
+    async def assign_closest_amenities(self) -> bool:
+        success = False
         try:
             await self._repository.assign_closest_amenities()
+            success = True
         except Exception as e:
             print(f"assigning closest amenities failed. Error: {e}")
+        return success
 
     async def get_buildings(self) -> List[Building]:
         await self._fetch_boundaries()

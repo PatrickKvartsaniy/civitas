@@ -1,5 +1,5 @@
 import random
-from typing import List
+from typing import List, Optional
 
 import overpy
 
@@ -20,8 +20,6 @@ class Client:
     async def extract_buildings(self, bounding_box: tuple) -> List[Building]:
         """
         Fetch all buildings and their metadata within the bounding box.
-
-        :return: Overpy result object with building data.
         """
         query = f"""
         [out:json];
@@ -39,10 +37,15 @@ class Client:
                 osm_id=way.id,
                 information=way.tags,
                 geometry=to_geojson(Polygon(nodes)),
+                height=self.get_building_height(),
                 requires_maintenance=get_random_bool(),
             )
             buildings.append(building)
         return buildings
+
+    @staticmethod
+    def get_building_height() -> Optional[int]:
+        return random.randint(3, 12)
 
     async def extract_amenities(self, bounding_box: tuple) -> List[Amenity]:
         """

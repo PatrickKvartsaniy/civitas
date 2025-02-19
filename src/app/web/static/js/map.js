@@ -2,7 +2,7 @@
 function initMap(container) {
     return new mapboxgl.Map({
         container: container,
-        style: 'mapbox://styles/mapbox/streets-v12',
+        style: 'mapbox://styles/mapbox/light-v11',
         center: [14.4551924, 35.9052445],
         zoom: 10
     });

@@ -1,7 +1,9 @@
+import logging
 import uuid
 from datetime import datetime
 from typing import Optional, List
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.future import select
 from sqlalchemy import func, update
 from sqlalchemy.orm import aliased
@@ -20,6 +22,8 @@ from .models import (
     Amenity as AmenityModel,
     Building as BuildingModel,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class PersistenceRepository:
@@ -139,25 +143,32 @@ class PersistenceRepository:
             await session.commit()
 
     async def load_buildings(self, buildings: List[Building]):
-        """Load multiple buildings into DB."""
-        if not buildings:  # Avoid unnecessary DB calls if list is empty
+        """Load multiple buildings into DB, handling conflicts."""
+        if not buildings:
             return
 
         async with self.db.session() as session:
             async with session.begin():  # Ensures rollback on failure
-                session.add_all(
-                    [
-                        BuildingModel(
-                            osm_id=b.osm_id,
-                            information=b.information,
-                            geometry=b.geometry,
-                            requires_maintenance=b.requires_maintenance,
-                            updated_at=b.updated_at,
-                            updated_by=b.updated_by,
-                        )
-                        for b in buildings
-                    ]
-                )
+                try:
+                    session.add_all(
+                        [
+                            BuildingModel(
+                                osm_id=b.osm_id,
+                                information=b.information,
+                                geometry=b.geometry,
+                                requires_maintenance=b.requires_maintenance,
+                                updated_at=b.updated_at,
+                                updated_by=b.updated_by,
+                                height=b.height,
+                            )
+                            for b in buildings
+                        ]
+                    )
+                except IntegrityError as e:
+                    logger.error(f"Error inserting buildings: {e}")
+                except Exception as e:
+                    await session.rollback()
+                    logger.error(f"Unexpected error: {e}")
 
     async def get_buildings(self) -> List[Building]:
         async with self.db.session() as session:
@@ -260,7 +271,7 @@ class PersistenceRepository:
         async with self.db.session() as session:
             closest_amenity = aliased(AmenityModel)
 
-            SEARCH_RADIUS = 2  # in meters
+            SEARCH_RADIUS = 1  # in meters
 
             # Find the closest amenity for each building
             subquery = (
