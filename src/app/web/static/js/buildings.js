@@ -12,12 +12,16 @@ function addBuildingsLayer(geojson) {
 
     map.addSource('buildings-source', { type: 'geojson', data: geojson });
 
+    // Set map pitch for 3D effect
+    map.easeTo({ pitch: 60, bearing: -20 });
+
+    // Add 3D buildings layer
     map.addLayer({
         id: 'buildings-layer',
-        type: 'fill',
+        type: 'fill-extrusion',
         source: 'buildings-source',
         paint: {
-            'fill-color': [
+            'fill-extrusion-color': [
                 'case',
                 ['==', ['get', 'id'], ['literal', selectedBuildingId]], selectedBuildingColor, // Highlight selected
                 ['match',
@@ -26,15 +30,10 @@ function addBuildingsLayer(geojson) {
                     defaultColor
                 ]
             ],
-            'fill-opacity': 0.5
+            'fill-extrusion-height': ['get', 'height'], // Use building height from GeoJSON
+            'fill-extrusion-base': 0,
+            'fill-extrusion-opacity': 0.8
         }
-    });
-
-    map.addLayer({
-        id: 'buildings-outline',
-        type: 'line',
-        source: 'buildings-source',
-        paint: { 'line-color': '#000', 'line-width': 1 }
     });
 
     map.on('click', 'buildings-layer', (e) => {
@@ -51,6 +50,7 @@ function addBuildingsLayer(geojson) {
         map.getCanvas().style.cursor = '';
     });
 }
+
 
 function selectBuilding(buildingId) {
     selectedBuildingId = buildingId;

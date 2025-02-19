@@ -17,7 +17,7 @@ function findClosestAmenity(properties, category) {
                 .setHTML(`
                     <strong>Closest ${category}:</strong> ${data.amenity.properties.name}<br>
                     <strong>Distance:</strong> ${data.route.distance}m<br>
-                    <strong>Time:</strong> ${data.route.duration/60} min walking
+                    <strong>Time:</strong> ${Math.floor(data.route.duration / 60)} min walking
                 `)
                 .addTo(map);
 
