@@ -1,7 +1,7 @@
 # Civitas
 
 ## Overview
-Civitas is a geospatial data-driven application that leverages **Domain-Driven Design (DDD)** and **Hexagonal Architecture** to provide insights and analytics for urban environments. It integrates various geospatial services, routing functionalities, and data processing techniques to deliver valuable insights for city planning, logistics, and more.
+Civitas is a geospatial data-driven application that leverages **Domain-Driven Design (DDD)** and **Hexagonal Architecture** to provide insights and analytics for urban environments through an interactive 2D and 3D map viewer and a comprehensive dashboard. It also enables user participation by allowing them to report the maintenance status of buildings, indicating whether repairs are needed. It integrates various geospatial services, routing functionalities, and data processing techniques to deliver valuable insights for city planning, logistics, and more.
 
 ## Preview
 (It takes some time to load the map first time, but after that it will be momentary since both server side and client side cache are implemented)
@@ -14,7 +14,7 @@ https://civitas-471b.onrender.com/web/map/amenities
 - **Framework:** FastAPI
 - **Database:** PostgreSQL with PostGIS
 - **Geospatial Tools:** Overpass API, Terra
-- **Frontend:** Mapbox GL JS
+- **Frontend:** Mapbox GL JS, HTML, CSS, JS, flask, jinja
 - **Infrastructure:** Docker, Terraform
 - **Linting:** Black
 
