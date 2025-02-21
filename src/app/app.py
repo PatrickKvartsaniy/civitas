@@ -12,6 +12,7 @@ from src.pkg.repository import Repository
 from src.pkg.service import Service
 from src.pkg.adapters.overpass import OverpassClient
 from src.pkg.adapters.terra import TerraClient
+from src.pkg.adapters.mapbox import MapboxClient
 
 logger = logging.getLogger(__name__)
 
@@ -48,11 +49,13 @@ def create_app(cfg: Settings) -> App:
         cfg.TERRA.CLIENT_ID,
         cfg.TERRA.CLIENT_SECRET,
     )
+    mapbox = MapboxClient(cfg.WEB.MAPBOX_ACCESS_TOKEN)
     repo = Repository(db)
     service = Service(
         repo,
         terra,
         overpass,
+        mapbox,
         cfg.TERRA.AREA_BOUNDARIES_COLLECTION_ID,
         cfg.TERRA.AREA_BOUNDARIES_FEATURE_ID,
     )

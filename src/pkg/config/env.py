@@ -31,7 +31,8 @@ class _WebSettings(BaseSettings):
     MAPBOX_ACCESS_TOKEN: str = (
         "pk.eyJ1IjoicGV0cm8ta3ZhcnRzaWFueWkiLCJhIjoiY202ejdiMmlkMDI1ODJwc2s4NTIxeWc4dSJ9.-k0IrJNRzERdc-Qgsl_ovA"
     )
-    API_URL: str = "https://civitas-471b.onrender.com/api"
+    # API_URL: str = "https://civitas-471b.onrender.com/api"
+    API_URL: str = "http://127.0.0.1:8080/api"
 
 
 class Settings(BaseSettings):

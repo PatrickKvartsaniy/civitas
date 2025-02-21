@@ -1,6 +1,4 @@
-from typing import List, Optional, Any, Coroutine
-
-from sqlalchemy import Boolean
+from typing import List, Optional
 
 from src.pkg.deps.interfaces import ServiceInterface, RepositoryInterface
 from src.pkg.models import (
@@ -12,7 +10,8 @@ from src.pkg.models import (
 )
 from src.pkg.adapters.terra import TerraClient
 from src.pkg.adapters.overpass import OverpassClient
-from src.pkg.models.enums import AmenityCategory, amenity_category_map
+from src.pkg.adapters.mapbox import MapboxClient
+from src.pkg.models.enums import AmenityCategory
 
 
 class Service(ServiceInterface):
@@ -21,14 +20,23 @@ class Service(ServiceInterface):
         repository: RepositoryInterface,
         terra_client: TerraClient,
         overpass_client: OverpassClient,
+        mapbox_client: MapboxClient,
         feature_collection_id: str,
         feature_id: str,
     ):
         self._repository = repository
         self._overpass_client = overpass_client
         self._terra_client = terra_client
+        self._mapbox_client = mapbox_client
         self._feature_collection_id = feature_collection_id
         self._feature_id = feature_id
+
+    async def get_building_image(self, building_id: str) -> Optional[bytes]:
+        building = await self._repository.get_building(building_id)
+        if not building:
+            return None
+
+        return await self._mapbox_client.get_static_image(building.as_geojson_string())
 
     async def sync_buildings(self) -> bool:
         success = False
@@ -83,7 +91,6 @@ class Service(ServiceInterface):
         await self._repository.update_building(
             building_id,
             BuildingUpdate(
-                amenity_id=building_amenity.id,
                 information=building.information,
                 requires_maintenance=building.requires_maintenance,
                 updated_by=building.updated_by,
@@ -110,7 +117,7 @@ class Service(ServiceInterface):
                 (amenity.shapely_geometry.x, amenity.shapely_geometry.y),
             ]
         )
-        return ClosestAmenityResponse(amenity=amenity.as_geojson(), route=route)
+        return ClosestAmenityResponse(amenity=amenity.as_geojson_string(), route=route)
 
     async def _fetch_boundaries(self):
         feature = await self._terra_client.fetch_collection_feature(

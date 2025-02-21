@@ -46,41 +46,63 @@ function addBuildingsLayer(geojson) {
 
     const form = document.createElement('form');
     form.id = 'maintenance-form';
+    form.classList.add('row', 'g-3');
 
-    // Set default values based on properties:
-    const requiresMaintenanceValue = properties.requires_maintenance ? 'true' : 'false'; // Convert boolean to string
-    const updatedByValue = properties.updated_by || ''; // Use empty string if updated_by is not present
-    console.log(properties)
-    form.innerHTML = `
-        <h3>Update Maintenance Status</h3>
-        <label for="requires_maintenance">Requires Maintenance:</label>
-        <select id="requires_maintenance" name="requires_maintenance">
-            <option value="true" ${requiresMaintenanceValue === 'true' ? 'selected' : ''}>Yes</option>
-            <option value="false" ${requiresMaintenanceValue === 'false' ? 'selected' : ''}>No</option>
-        </select><br><br>
-        <label for="information">Additional Information:</label><br>
-        <textarea id="information" name="information">${properties.information || ''}</textarea><br><br>
-        <label for="updated_by">Updated By:</label>
-        <input type="text" id="updated_by" name="updated_by" value="${updatedByValue}"><br><br>
-        <button type="submit">Update</button>
-    `;
+    const requiresMaintenanceValue = properties.requires_maintenance;
 
-        // 2. Add event listener to the form:
+    const img = document.createElement('img');
+    img.src = `${API_URL}/buildings/${buildingId}/image`;
+    img.alt = "Building Image";
+    img.style.maxWidth = "100%";
+    img.style.height = "auto";
+    img.classList.add('mb-3');
+
+    const spinner = document.createElement('div');
+    spinner.classList.add('spinner-border', 'text-primary', 'd-flex', 'justify-content-center'); // Center the spinner
+    spinner.setAttribute('role', 'status');
+    spinner.innerHTML = '<span class="visually-hidden">Loading...</span>';
+
+form.innerHTML = `
+    <h4>Update Maintenance Status</h4>
+    <div class="col-12">
+        <label for="requires_maintenance" class="form-label">Requires Maintenance:</label>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="requires_maintenance" name="requires_maintenance" ${requiresMaintenanceValue ? 'checked' : ''}>
+        </div>
+    </div>
+    <div class="col-12">
+        <label for="information" class="form-label">Additional Information:</label>
+        <textarea class="form-control" id="information" name="information">${properties.information || ''}</textarea>
+    </div>
+    <div class="col-12">
+        <button type="submit" class="btn btn-primary">Update</button>
+    </div>
+`;
+form.prepend(spinner);
+form.prepend(img);
+
+    img.onload = () => {
+        spinner.remove(); // Hide spinner when image is loaded
+    };
+
+    img.onerror = () => {
+        console.error("Failed to load building image.");
+        img.alt = "Building image not available.";
+        spinner.remove();// Hide spinner on error too
+    };
+
         form.addEventListener('submit', (event) => {
             event.preventDefault();
 
-            const newStatus = document.getElementById('requires_maintenance').value === 'true';
+            const newStatus = document.getElementById('requires_maintenance').checked;
             const additionalInfo = document.getElementById('information').value;
-            const updatedBy = document.getElementById('updated_by').value;
+            updateMaintenanceStatus(buildingId, newStatus, additionalInfo);
 
-            updateMaintenanceStatus(buildingId, newStatus, additionalInfo, updatedBy);
-
-            form.remove(); // Remove the form after submission
+            form.remove();
         });
 
-        // 3. Display the form (e.g., in the sidebar):
         const buildingInfoDiv = document.getElementById('building-info');
-        buildingInfoDiv.innerHTML = ""; // Clear existing info
+        buildingInfoDiv.innerHTML = "";
         buildingInfoDiv.appendChild(form);
 
     });
@@ -110,19 +132,17 @@ map.on('click', 'buildings', (e) => {
 });
 
 // Update maintenance status in backend
-function updateMaintenanceStatus(buildingId, newStatus, information, updatedBy) {
+function updateMaintenanceStatus(buildingId, newStatus, information) {
     fetch(`${API_URL}/buildings/${buildingId}`, {
         method: 'PATCH',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
             requires_maintenance: newStatus,
-            information: {notes: information},
-            updated_by: updatedBy,
+            information: information,
         })
     })
         .then(response => response.json())
         .then(updatedBuilding => {
-            console.log("Updated:", updatedBuilding);
             fetchAndCacheData(addBuildingsLayer);
         })
         .catch(error => console.error("Error updating maintenance:", error));
@@ -138,7 +158,6 @@ map.on('load', () => {
             fetchAndCacheData(addBuildingsLayer);
         }
     });
-    console.log(window.maintenanceColors);
     const legend = createLegend("Buildings status", window.maintenanceColors); // Create the legend
     document.getElementById('map').parentNode.appendChild(legend); // Append legend
 });
