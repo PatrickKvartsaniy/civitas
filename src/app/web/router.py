@@ -1,6 +1,7 @@
+import json
 import logging
 import os
-import time
+
 from fastapi import APIRouter, FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
@@ -40,32 +41,12 @@ async def get_buildings(request: Request):
 
 @api_router.get("/buildings/geojson")
 async def get_buildings_geojson(request: Request):
-    start_time_total = time.time()  # Start timing the entire function
-
-    start_time_db = time.time()  # Start timing database query
     buildings = await request.app.state.service.get_buildings()
-    end_time_db = time.time()  # End timing database query
-    db_time = end_time_db - start_time_db
 
-    start_time_geojson = time.time()  # Start timing GeoJSON conversion
-    features = [b.as_geojson() for b in buildings]
-    end_time_geojson = time.time()  # End timing GeoJSON conversion
-    geojson_time = end_time_geojson - start_time_geojson
-
-    geojson_response = {
+    return {
         "type": "FeatureCollection",
-        "features": features,
+        "features": [b.as_geojson() for b in buildings],
     }
-
-    end_time_total = time.time()  # End timing the entire function
-    total_time = end_time_total - start_time_total
-
-    # Log the timings (or use a more structured logging approach)
-    logger.info(f"Database Query Time: {db_time:.4f} seconds")
-    logger.info(f"GeoJSON Conversion Time: {geojson_time:.4f} seconds")
-    logger.info(f"Total Request Time: {total_time:.4f} seconds")
-
-    return geojson_response
 
 
 @api_router.patch("/buildings/{building_id}")
@@ -132,23 +113,39 @@ async def delete_amenity(request: Request, amenity_id: str):
 
 @web_router.get("/map/amenities", response_class=HTMLResponse)
 async def map_page(request: Request):
+    buildings = await request.app.state.service.get_buildings()
+
+    feature_collection = {
+        "type": "FeatureCollection",
+        "features": [b.as_geojson() for b in buildings],
+    }
+
     return templates.TemplateResponse(
         "map/amenities.html",
         {
             "request": request,
             "mapbox_access_token": request.app.state.cfg.MAPBOX_ACCESS_TOKEN,
             "api_url": request.app.state.cfg.API_URL,
+            "buildings": json.dumps(feature_collection),
         },
     )
 
 
 @web_router.get("/map/maintenance", response_class=HTMLResponse)
 async def maintenance_page(request: Request):
+    buildings = await request.app.state.service.get_buildings()
+
+    feature_collection = {
+        "type": "FeatureCollection",
+        "features": [b.as_geojson() for b in buildings],
+    }
+
     return templates.TemplateResponse(
         "map/maintenance.html",
         {
             "request": request,
             "mapbox_access_token": request.app.state.cfg.MAPBOX_ACCESS_TOKEN,
             "api_url": request.app.state.cfg.API_URL,
+            "buildings": json.dumps(feature_collection),
         },
     )
