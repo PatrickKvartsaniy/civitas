@@ -16,6 +16,7 @@ function findClosestAmenity(buildingId, category) {
             }
             let amenity = JSON.parse(data.amenity);
             if (popup) popup.remove();
+            console.log(amenity.geometry)
             popup = new mapboxgl.Popup()
                 .setLngLat(amenity.geometry.coordinates)
                 .setHTML(`
@@ -145,6 +146,7 @@ function closeBuildingInfo() {
 }
 
 function addBuildingsLayer(geojson) {
+    map.on('load', () => {  // Ensure map is fully loaded
     if (map.getSource('buildings-source')) {
         map.getSource('buildings-source').setData(geojson);
         return;
@@ -189,6 +191,7 @@ function addBuildingsLayer(geojson) {
     map.on('mouseleave', 'buildings-layer', () => {
         map.getCanvas().style.cursor = '';
     });
+    })
 }
 
 

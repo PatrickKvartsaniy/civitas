@@ -55,10 +55,10 @@ class GeoJSONable(BaseModel):
             ]
 
         elif geometry_type in {"Point", "MultiPoint"}:
-            coordinates = [
-                point.coords[0]
-                for point in getattr(shapely_geom, "geoms", [shapely_geom])
-            ]
+            if geometry_type == "Point":
+                coordinates = list(shapely_geom.coords[0])
+            else:
+                coordinates = [list(point.coords[0]) for point in shapely_geom.geoms]
 
         else:
             raise ValueError(f"Unsupported geometry type: {geometry_type}")
