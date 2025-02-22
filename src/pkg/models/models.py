@@ -1,8 +1,7 @@
-import json
+import orjson  # Faster JSON serialization
 import uuid
 from datetime import datetime
 from typing import Optional, Dict, Any
-
 from pydantic import BaseModel, Field, ConfigDict
 from shapely.wkt import loads
 
@@ -14,9 +13,9 @@ class GeoJSONable(BaseModel):
 
     def __as_geojson_string__(self, properties: Dict[str, Any]) -> str:
         """
-        Converts a model to a GeoJSON string.
+        Converts a model to a GeoJSON string using fast serialization.
         """
-        return json.dumps(self.__as_geojson__(properties))
+        return orjson.dumps(self.__as_geojson__(properties)).decode()
 
     def __as_geojson__(self, properties: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -28,32 +27,38 @@ class GeoJSONable(BaseModel):
 
         geometry_type = shapely_geom.geom_type
 
-        # Handle different geometry types
+        # Optimized coordinate extraction
         if geometry_type == "Polygon":
-            coordinates = [list(shapely_geom.exterior.coords)]
-            if shapely_geom.interiors:
-                coordinates += [list(ring.coords) for ring in shapely_geom.interiors]
+            exterior = list(shapely_geom.exterior.coords)
+            interiors = (
+                [list(ring.coords) for ring in shapely_geom.interiors]
+                if shapely_geom.interiors
+                else []
+            )
+            coordinates = [exterior] + interiors
 
         elif geometry_type == "MultiPolygon":
+            coordinates = []
+            for polygon in shapely_geom.geoms:
+                exterior = list(polygon.exterior.coords)
+                interiors = (
+                    [list(ring.coords) for ring in polygon.interiors]
+                    if polygon.interiors
+                    else []
+                )
+                coordinates.append([exterior] + interiors)
+
+        elif geometry_type in {"LineString", "MultiLineString"}:
             coordinates = [
-                [
-                    [list(polygon.exterior.coords)]
-                    + [list(ring.coords) for ring in polygon.interiors]
-                ]
-                for polygon in shapely_geom.geoms
+                list(geom.coords)
+                for geom in getattr(shapely_geom, "geoms", [shapely_geom])
             ]
 
-        elif geometry_type == "LineString":
-            coordinates = list(shapely_geom.coords)
-
-        elif geometry_type == "MultiLineString":
-            coordinates = [list(geom.coords) for geom in shapely_geom.geoms]
-
-        elif geometry_type == "Point":
-            coordinates = list(shapely_geom.coords)[0]
-
-        elif geometry_type == "MultiPoint":
-            coordinates = [list(point.coords)[0] for point in shapely_geom.geoms]
+        elif geometry_type in {"Point", "MultiPoint"}:
+            coordinates = [
+                point.coords[0]
+                for point in getattr(shapely_geom, "geoms", [shapely_geom])
+            ]
 
         else:
             raise ValueError(f"Unsupported geometry type: {geometry_type}")
