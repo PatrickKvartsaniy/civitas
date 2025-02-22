@@ -25,7 +25,9 @@ class DatabaseSessionManager:
     def __init__(self, uri: str, engine_kwargs=None):
         if engine_kwargs is None:
             engine_kwargs = {}
-        self._engine = create_async_engine(uri, **engine_kwargs)
+        self._engine = create_async_engine(
+            uri, pool_size=20, max_overflow=10, **engine_kwargs
+        )
         self._sessionmaker = async_sessionmaker(autocommit=False, bind=self._engine)
         self._uri = uri
 

@@ -123,7 +123,8 @@ class Service(ServiceInterface):
         feature = await self._terra_client.fetch_collection_feature(
             self._feature_collection_id, self._feature_id
         )
-
+        if not feature:
+            raise ValueError("Feature with boundaries not found")
         # Extract geometry
         geometry = feature.get("geometry", {})
         if not geometry:
