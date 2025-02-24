@@ -14,6 +14,11 @@ class ETL:
         await self.sync()
 
     async def sync(self):
+        logger.info("Starting the ETL process...")
+        await self._run_sync()
+        logger.info("ETL process completed.")
+
+    async def _run_sync(self):
         if not await self.service.sync_buildings():  # <1>
             logger.error("Failed to sync buildings. Exiting...")
             return

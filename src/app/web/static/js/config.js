@@ -3,7 +3,7 @@ mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
 window.categoryColors = {
     "Emergency and Public Services": {
         color: "#007bff",
-        label: "Emergency and Public Services",
+        label: "Public Services",
         icon: "bi-shield-exclamation"
     },
     "Food and Drink": {

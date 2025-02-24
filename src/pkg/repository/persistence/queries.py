@@ -172,13 +172,11 @@ class PersistenceRepository:
 
     async def get_buildings(self) -> List[Building]:
         async with self.db.session() as session:
-            # Query buildings with their related amenities
+            # Query only buildings
             result = await session.execute(
-                select(BuildingModel)
-                .outerjoin(AmenityModel, BuildingModel.amenity == AmenityModel.id)
-                .options(
-                    orm.joinedload(BuildingModel.amenity_rel)
-                )  # Eager load amenity_rel
+                select(BuildingModel).options(
+                    orm.selectinload(BuildingModel.amenity_rel)
+                )
             )
 
             buildings_orm = result.scalars().all()
@@ -278,12 +276,13 @@ class PersistenceRepository:
                 select(
                     BuildingModel.id.label("building_id"),
                     closest_amenity.id.label("amenity_id"),
+                    closest_amenity.amenity_category,
                     func.ST_Distance(
                         BuildingModel.geometry, closest_amenity.geometry
                     ).label("distance"),
                     func.row_number()
                     .over(
-                        partition_by=BuildingModel.id,  # Rank per building (fixing the previous issue)
+                        partition_by=BuildingModel.id,
                         order_by=func.ST_Distance(
                             BuildingModel.geometry, closest_amenity.geometry
                         ),
@@ -301,7 +300,11 @@ class PersistenceRepository:
 
             # Select only the top-ranked closest amenity per building
             ranked_amenities_cte = (
-                select(subquery.c.building_id, subquery.c.amenity_id)
+                select(
+                    subquery.c.building_id,
+                    subquery.c.amenity_id,
+                    subquery.c.amenity_category,
+                )
                 .where(subquery.c.rank == 1)
                 .cte("ranked_amenities")
             )
@@ -309,7 +312,10 @@ class PersistenceRepository:
             # Update the buildings table
             update_stmt = (
                 update(BuildingModel)
-                .values(amenity=ranked_amenities_cte.c.amenity_id)
+                .values(
+                    amenity=ranked_amenities_cte.c.amenity_id,
+                    amenity_category=ranked_amenities_cte.c.amenity_category,
+                )
                 .where(BuildingModel.id == ranked_amenities_cte.c.building_id)
             )
 

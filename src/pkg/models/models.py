@@ -91,7 +91,9 @@ class Amenity(GeoJSONable):
 
     def populate_category(self):
         """Populates the `amenity_category` based on `amenity_type`."""
-        self.amenity_category = amenity_category_map.get(self.amenity_type, "Other")
+        self.amenity_category = amenity_category_map.get(
+            self.amenity_type, "Residential"
+        )
 
     @property
     def shapely_geometry(self):
@@ -138,6 +140,7 @@ class Building(GeoJSONable):
     height: Optional[int] = None
     requires_maintenance: bool
     amenity: Optional[Amenity] = None
+    amenity_category: Optional[str] = None
     updated_at: datetime = Field(default_factory=datetime.now)
     updated_by: Optional[str] = None
 
@@ -152,7 +155,7 @@ class Building(GeoJSONable):
     def get_properties(self) -> Dict[str, Any]:
         """Returns the properties of the building."""
 
-        amenity_category = self.amenity.amenity_category if self.amenity else None
+        amenity_category = self.amenity_category
         if not amenity_category:
             amenity_category = amenity_category_map.get(
                 self.information.get("amenity"), "Residential"
@@ -164,6 +167,7 @@ class Building(GeoJSONable):
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
             "updated_by": self.updated_by,
             "amenity_category": amenity_category,
+            "amenity": self.amenity.as_geojson() if self.amenity else None,
             "height": self.height,
             "information": self.information,
         }

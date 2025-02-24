@@ -109,6 +109,7 @@ class Building(Base):
         Boolean, default=False, nullable=False, server_default="false"
     )
     height = Column(BigInteger, nullable=True)
+    amenity_category = Column(String, nullable=False, server_default="Residential")
     amenity = Column(UUID(as_uuid=True), ForeignKey("amenities.id"), nullable=True)
     amenity_rel = relationship("Amenity")
 
@@ -142,6 +143,7 @@ class Building(Base):
             "updated_at": self.updated_at,
             "updated_by": self.updated_by,
             "amenity": self.amenity_rel.as_dto() if self.amenity_rel else None,
+            "amenity_category": self.amenity_category,
             "height": self.height,
         }
         return BuildingSchema.model_validate(as_dict)

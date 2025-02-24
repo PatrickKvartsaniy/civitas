@@ -3,8 +3,8 @@ function initMap(container) {
     return new mapboxgl.Map({
         container: container,
         style: 'mapbox://styles/mapbox/light-v11',
-        center: [14.4551924, 35.9052445],
-        zoom: 10
+        center: [14.4943068,35.8711361],
+        zoom: 12
     });
 }
 

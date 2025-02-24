@@ -1,24 +1,26 @@
 import argparse
 import asyncio
 import logging
+import sys
 
 from src.app import create_app
 from src.pkg.config import get_settings
 
 settings = get_settings()
 
+# Configure logging
 logging.basicConfig(
     format="{asctime} - {levelname} - {message}",
     style="{",
     datefmt="%Y-%m-%d %H:%M",
     level=settings.LOG_LEVEL,
+    handlers=[logging.StreamHandler(sys.stdout)],
 )
 logger = logging.getLogger(__name__)
 
 
-def main():
-    """Main entry point for the application."""
-    # Parse command-line arguments
+def parse_arguments():
+    """Parses command-line arguments."""
     parser = argparse.ArgumentParser(description="Run the desired app.")
     parser.add_argument(
         "app",
@@ -30,17 +32,19 @@ def main():
         action="store_true",
         help="Run Alembic migrations before starting the app",
     )
-    args = parser.parse_args()
+    return parser.parse_args()
+
+
+def main():
+    """Main entry point for the application."""
+    args = parse_arguments()
     app = create_app(settings)
 
-    # Run the selected application
     if args.app == "web":
         logger.info("Starting the web app...")
         app.serve()
     elif args.app == "etl":
-        logger.info("Starting the ETL process...")
         asyncio.run(app.sync())
-        logger.info("ETL process completed.")
 
 
 if __name__ == "__main__":
@@ -48,3 +52,6 @@ if __name__ == "__main__":
         main()
     except KeyboardInterrupt:
         logger.warning("Shutdown requested. Exiting...")
+    except Exception as e:
+        logger.exception(f"Fatal error: {e}")
+        sys.exit(1)

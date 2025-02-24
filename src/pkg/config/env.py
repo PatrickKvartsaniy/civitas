@@ -12,7 +12,7 @@ class _TerraSettings(BaseSettings):
         "NTMxNDdjZGU1OTU3MGViNzdlMDk2Y2U1Mjg3MjZjNWI4MDQ5MGNiNDA3NmM5NjdkYTYzODI1OTk3YzRiMmNkYw=="
     )
     AREA_BOUNDARIES_COLLECTION_ID: str = "41e65f3c-2f79-4442-a3ca-741810ef4163"
-    AREA_BOUNDARIES_FEATURE_ID: str = "e67c1720-e322-11ef-a667-31686f2e2bd0"
+    AREA_BOUNDARIES_FEATURE_ID: str = "61fa1da0-f2a2-11ef-8199-2d8c1a180a56"
 
 
 class _DatabaseSettings(BaseSettings):
