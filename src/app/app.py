@@ -1,3 +1,5 @@
+import socket
+
 import uvicorn
 import asyncio
 import logging
@@ -28,9 +30,22 @@ class App:
         """Run ETL process."""
         return await self._etl_engine.sync()
 
-    def serve(self):
+    def serve(self, use_local_network: bool = False):
         logger.info("Starting web server...")
-        uvicorn.run(self._web_engine, host=self._cfg.HOST, port=self._cfg.PORT)
+        host = self.get_local_ip() if use_local_network else self._cfg.HOST
+        uvicorn.run(self._web_engine, host=host, port=self._cfg.PORT)
+
+    @staticmethod
+    def get_local_ip():
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            ip_address = s.getsockname()[0]
+            s.close()
+            return ip_address
+        except Exception as e:
+            print(f"Error getting IP: {e}")
+            return None
 
     async def shutdown(self):
         """Graceful shutdown handler."""

@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 import logging
+import socket
 import sys
 
 from src.app import create_app
@@ -28,6 +29,12 @@ def parse_arguments():
         help="The app to run: 'web' for the web app, 'etl' for the ETL app.",
     )
     parser.add_argument(
+        "local",
+        type=bool,
+        default=False,
+        help="Run in the local network?",
+    )
+    parser.add_argument(
         "--automigrate",
         action="store_true",
         help="Run Alembic migrations before starting the app",
@@ -42,7 +49,7 @@ def main():
 
     if args.app == "web":
         logger.info("Starting the web app...")
-        app.serve()
+        app.serve(args.local)
     elif args.app == "etl":
         asyncio.run(app.sync())
 

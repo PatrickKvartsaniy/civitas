@@ -5,34 +5,41 @@ function addMaintenanceBuildingsLayer(geojson) {
         map.getSource('buildings-source').setData(geojson);
         return;
     }
-    map.addSource('buildings-source', {type: 'geojson', data: geojson});
+    map.addSource('buildings-source', { type: 'geojson', data: geojson });
 
+    map.easeTo({ pitch: 60, bearing: -20 });
+
+    // 3D Extrusion Layer for Buildings
     map.addLayer({
         id: 'buildings-layer',
-        type: 'fill',
+        type: 'fill-extrusion',
         source: 'buildings-source',
         paint: {
-            'fill-color': [
+            'fill-extrusion-color': [
                 'case',
                 ['==', ['get', 'requires_maintenance'], true], window.maintenanceColors.true.color,
                 window.maintenanceColors.false.color
             ],
-            'fill-opacity': 0.5
+            'fill-extrusion-opacity': 0.7,
+            'fill-extrusion-height': ['get', 'height'], // Ensure height is available in GeoJSON properties
+            'fill-extrusion-base': 0
         }
     });
 
+    // Outline for better visibility
     map.addLayer({
         id: 'buildings-outline',
         type: 'line',
         source: 'buildings-source',
-        paint: {'line-color': '#000', 'line-width': 1}
+        paint: { 'line-color': '#000', 'line-width': 1 }
     });
 
+    // Click event to highlight a building
     map.on('click', 'buildings-layer', (e) => {
         const properties = e.features[0].properties;
         const buildingId = properties.id;
 
-        map.setPaintProperty('buildings-layer', 'fill-color', [
+        map.setPaintProperty('buildings-layer', 'fill-extrusion-color', [
             'case',
             ['==', ['get', 'id'], properties.id],
             '#ff6600',
@@ -42,6 +49,7 @@ function addMaintenanceBuildingsLayer(geojson) {
                 window.maintenanceColors.false.color
             ]
         ]);
+
         const maintenance = window.maintenanceColors[properties.requires_maintenance];
         const content = `
             <p><strong><i class="bi ${maintenance.icon}"></i> Maintenance:</strong>
@@ -111,7 +119,16 @@ function addMaintenanceBuildingsLayer(geojson) {
     map.on('mouseleave', 'buildings-layer', () => { map.getCanvas().style.cursor = ''; });
 }
 
+// Add Mapbox Terrain for better 3D effect
 map.on('load', () => {
+    map.addSource('mapbox-dem', {
+        type: 'raster-dem',
+        url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+        tileSize: 512,
+        maxzoom: 14
+    });
+    map.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 });
+
     getCachedData().then(cachedData => {
         if (cachedData) {
             addMaintenanceBuildingsLayer(cachedData);
@@ -120,6 +137,7 @@ map.on('load', () => {
             fetchAndCacheData(addMaintenanceBuildingsLayer);
         }
     });
+
     const legend = createLegend("Buildings status", window.maintenanceColors);
     document.getElementById('map').parentNode.appendChild(legend);
 });
