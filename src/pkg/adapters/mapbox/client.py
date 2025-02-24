@@ -15,7 +15,7 @@ class Client:
     async def get_static_image(
         self,
         geojson_str: str,
-        zoom: int = 20,
+        zoom: int = 18,
         size: str = "800x600",
     ) -> Optional[bytes]:
         """

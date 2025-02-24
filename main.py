@@ -29,7 +29,7 @@ def parse_arguments():
         help="The app to run: 'web' for the web app, 'etl' for the ETL app.",
     )
     parser.add_argument(
-        "local",
+        "--local",
         type=bool,
         default=False,
         help="Run in the local network?",
