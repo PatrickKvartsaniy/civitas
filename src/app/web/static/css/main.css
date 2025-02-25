@@ -11,7 +11,14 @@ body {
     padding: 20px;
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
     overflow-y: auto;
+    display: flex; /* Needed for mt-auto to work */
+    flex-direction: column; /* Needed for mt-auto to work */
 }
+
+#sidebar > *:not(.mt-auto) { /* Target direct children of #sidebar, except the button container */
+    min-height: 100px; /* Or adjust to a suitable minimum value */
+}
+
 
 #map {
     flex: 1;

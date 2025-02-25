@@ -1,56 +1,60 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>{% block title %}{{ title }}{% endblock %}</title>
+    {% include '_head.html' %}
+</head>
 
-{% block title %}Dashboard{% endblock %}
-
-{% block content %}
-
-<!-- About Start -->
-<div class="container-xxl py-6">
-    <div class="container">
-        <div class="row g-5 align-items-center">
-            <div class="col-lg-6 wow zoomIn" data-wow-delay="0.1s">
-                <img class="img-fluid" src="{{ url_for('static', path='img/dashboard1.jpg') }}">
-            </div>
-            <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s">
-                <div class="d-inline-block border rounded-pill text-primary px-4 mb-3">Insights</div>
-                <h2 class="mb-4"> Building Maintenance Dashboard
-                </h2>
-                <p class="mb-4">
-                    Optimize building upkeep with our smart dashboard—insights, analytics,
-                    and real-time maintenance tracking for better management.
-                </p>
-                <div class="row g-3 mb-4">
-                    <div class="col-12 d-flex">
-                        <div class="flex-shrink-0 btn-lg-square rounded-circle bg-primary">
-                            <i class="fa fa-chart-pie text-white"></i>
-                        </div>
-                        <div class="ms-4">
-                            <h6>
-                                Real-Time Maintenance Tracking
-                            </h6>
-                            <span>
-                                Monitor and manage building maintenance activities with live updates and status reports.
-                            </span>
-                        </div>
-                    </div>
-                    <div class="col-12 d-flex">
-                        <div class="flex-shrink-0 btn-lg-square rounded-circle bg-primary">
-                            <i class="fa fa-chart-line text-white"></i>
-                        </div>
-                        <div class="ms-4">
-                            <h6>
-                                Data-Driven Insights
-                            </h6>
-                            <span>
-                                Gain actionable analytics on building conditions, maintenance history, and performance
-                                trends for smarter decision-making.
-                            </span>
-                        </div>
-                    </div>
+<body>
+<div class="container-xxl bg-primary text-white p-0">
+    <!-- Navbar -->
+    {% include '_navbar.html' %}
+    {% block content %}
+    <div class="container-xxl py-6">
+        <div class="container">
+            <div class="row g-5 align-items-center">
+                <div class="col-lg-6 wow zoomIn" data-wow-delay="0.1s">
+                    <img class="img-fluid" src="{{ url_for('static', path='img/dashboard1.jpg') }}" alt="Dashboard">
                 </div>
-                <a class="btn btn-primary rounded-pill py-3 px-5 mt-2" href="{{ url_for('dashboard_index') }}">View</a>
+                <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s">
+                    <div class="d-inline-block border rounded-pill border-white px-4 mb-3">Insights</div>
+                    <h2 class="mb-4 text-white">Building Maintenance Dashboard</h2>
+                    <p class="mb-4 text-light">
+                        Optimize building upkeep with our smart dashboard—insights, analytics,
+                        and real-time maintenance tracking for better management.
+                    </p>
+                    <div class="row g-3 mb-4">
+                        <div class="col-12 d-flex">
+                            <div class="flex-shrink-0 btn-lg-square rounded-circle bg-white">
+                                <i class="fa fa-chart-pie text-primary"></i>
+                            </div>
+                            <div class="ms-4">
+                                <h6 class="text-white">Real-Time Maintenance Tracking</h6>
+                                <span class="text-light">
+                                    Monitor and manage building maintenance activities with live updates and status reports.
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-12 d-flex">
+                            <div class="flex-shrink-0 btn-lg-square rounded-circle bg-white">
+                                <i class="fa fa-chart-line text-primary"></i>
+                            </div>
+                            <div class="ms-4">
+                                <h6 class="text-white">Data-Driven Insights</h6>
+                                <span class="text-light">
+                                    Gain actionable analytics on building conditions, maintenance history, and performance trends for smarter decision-making.
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <a class="btn btn-light rounded-pill py-3 px-5 mt-2"
+                       href="{{ url_for('dashboard_index') }}">View</a>
+                </div>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
+{% include '_JSLibrary.html' %}
+</body>
+</html>

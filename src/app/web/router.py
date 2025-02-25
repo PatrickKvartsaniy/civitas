@@ -1,8 +1,10 @@
 import os
+from functools import wraps
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
 
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -26,3 +28,16 @@ def setup_middleware(app: FastAPI):
         SessionMiddleware,
         secret_key="VERY_SECRET_KEY",
     )
+
+
+def requires_login(func):
+    @wraps(func)
+    async def wrapper(request: Request, *args, **kwargs):
+        name = request.session.get("name")
+        if not name:
+            return RedirectResponse(
+                request.url_for("login"), status_code=status.HTTP_302_FOUND
+            )
+        return await func(request, *args, **kwargs)  # Call the original function
+
+    return wrapper

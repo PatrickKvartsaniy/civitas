@@ -1,7 +1,7 @@
 import orjson  # Faster JSON serialization
 import uuid
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from pydantic import BaseModel, Field, ConfigDict
 from shapely.wkt import loads
 
@@ -215,3 +215,26 @@ class ClosestAmenityResponse(BaseModel):
 
     amenity: str  # Amenity as GeoJSON
     route: RouteGeometryDistance
+
+
+class InsightsResponse(BaseModel):
+    buildings_count: int
+    maintenance_months_list: List[str]
+    maintenance_count_list: List[int]
+    maintained_buildings_list: List[int]
+    max_value: int
+    total_maintenance_requests: int
+    average_maintenance_count: float
+    trending_rate: float
+    historic_buildings_count: int
+    buildings_in_good_condition: int
+    historic_buildings_requires_maintenance: List[Dict[str, Any]]
+    historic_buildings_requires_maintenance_count: int
+    latest_5_buildings: List[Building]
+    amenities_count: int
+    amenity_types: List[Dict[str, Any]]
+    amenity_categories: List[Dict[str, Any]]
+    categories_list: List[str]
+    categories_counts_list: List[int]
+    categories_percentage_list: List[float]
+    background_colors: List[str]
