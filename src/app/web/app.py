@@ -1,16 +1,3 @@
-from flask import Flask, render_template, Response
-
-from datetime import datetime
-
-# from weasyprint import HTML
-import datascript
-
-# print(weasyprint.__version__)
-
-
-app = Flask(__name__)
-
-
 @app.route("/")
 @app.route("/home")
 def home():
