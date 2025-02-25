@@ -73,7 +73,7 @@ async def dashboard_index(request: Request):
         "data_variables": data_variables,
         "username": name,
     }
-    return templates.TemplateResponse("dashboard_index.html", context)
+    return templates.TemplateResponse("Dashboard_index.html", context)
 
 
 @requires_login
