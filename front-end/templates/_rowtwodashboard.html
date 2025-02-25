@@ -1,0 +1,60 @@
+<!-- row #2 -->
+<div class="row row-sm mg-b-20">
+  <!-- col #1 -->
+  <div class="col-lg-7 ht-lg-100p">
+    <div class="card card-dashboard-one">
+      <div class="card-header">
+        <div>
+          <h6 class="card-title">Maintanence Requests</h6>
+          <p class="card-text">Tracking buildings Monthly Maintanence requests for the latest 6 months..</p>
+        </div>
+      </div><!-- card-header -->
+      <div class="card-body">
+        <div class="card-body-top">
+          <p class="card-text"></p>
+        </div>
+        <div>
+          <div class="chartjs-wrapper-demo"><canvas id="chartLine1"></canvas></div>
+        </div>
+      </div><!-- card-body -->
+    </div><!-- card -->
+  </div>
+  <!-- col #1 end-->
+
+  <!--col #2 -->
+  <div class="col-lg-5 mg-t-20 mg-lg-t-0">
+    <div class="row row-sm">
+      <div class="col-sm-6 mg-t-20 mg-sm-t-0">
+        <div class="card card-dashboard-two">
+          <div class="card-header">
+            <h6 style="color: #00B98E;">{{data_variables.total_maintenance_requests}}<i id="trending_rate"
+                class="icon ion-md-trending-up tx-danger"></i> <small>{{data_variables.trending_rate}}%</small></h6>
+            <p>Total Requests</p>
+          </div><!-- card-header -->
+        </div><!-- card -->
+      </div><!-- col -->
+
+      <div class="col-sm-6 mg-t-20 mg-sm-t-0">
+        <div class="card card-dashboard-two">
+          <div class="card-header">
+            <h6 style="color: #00B98E;">{{data_variables.average_maintenance_count}}
+            </h6>
+            <p>Monthly Avarage</p>
+          </div><!-- card-header -->
+        </div><!-- card -->
+      </div><!-- col -->
+      <div class="col-sm-12 mg-t-20">
+        <div class="card card-dashboard-three">
+          <div class="card-header">
+            <p>Buildings conditions</p>
+          </div>
+          <div class="card-body">
+            <div class="chartjs-wrapper-demo"><canvas id="chartBar4"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!--col #2 end -->
+</div>
+<!-- row #2 end -->
