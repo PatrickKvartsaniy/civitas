@@ -1,59 +1,59 @@
-<script src="{{ url_for('static', filename='Dashboard_code/lib/jquery/jquery.min.js') }}"></script>
-<script src="{{ url_for('static', filename='Dashboard_code/lib/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
-<script src="{{ url_for('static', filename='Dashboard_code/lib/ionicons/ionicons.js') }}"></script>
-<script src="{{ url_for('static', filename='Dashboard_code/lib/jquery.flot/jquery.flot.js') }}"></script>
-<script src="{{ url_for('static', filename='Dashboard_code/lib/jquery.flot/jquery.flot.resize.js') }}"></script>
-<script src="{{ url_for('static', filename='Dashboard_code/lib/chart.js/Chart.bundle.min.js') }}"></script>
-<script src="{{ url_for('static', filename='Dashboard_code/lib/peity/jquery.peity.min.js') }}"></script>
+<script src="{{ url_for('static', path='Dashboard_code/lib/jquery/jquery.min.js') }}"></script>
+<script src="{{ url_for('static', path='Dashboard_code/lib/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ url_for('static', path='Dashboard_code/lib/ionicons/ionicons.js') }}"></script>
+<script src="{{ url_for('static', path='Dashboard_code/lib/jquery.flot/jquery.flot.js') }}"></script>
+<script src="{{ url_for('static', path='Dashboard_code/lib/jquery.flot/jquery.flot.resize.js') }}"></script>
+<script src="{{ url_for('static', path='Dashboard_code/lib/chart.js/Chart.bundle.min.js') }}"></script>
+<script src="{{ url_for('static', path='Dashboard_code/lib/peity/jquery.peity.min.js') }}"></script>
 
-<script src="{{ url_for('static', filename='Dashboard_code/js/azia.js') }}"></script>
-<script src="{{ url_for('static', filename='Dashboard_code/js/chart.flot.sampledata.js') }}"></script>
-<script src="{{ url_for('static', filename='Dashboard_code/js/dashboard.sampledata.js') }}"></script>
-<script src="{{ url_for('static', filename='Dashboard_code/js/jquery.cookie.js') }}" type="text/javascript"></script>
+<script src="{{ url_for('static', path='Dashboard_code/js/azia.js') }}"></script>
+<script src="{{ url_for('static', path='Dashboard_code/js/chart.flot.sampledata.js') }}"></script>
+<script src="{{ url_for('static', path='Dashboard_code/js/dashboard.sampledata.js') }}"></script>
+<script src="{{ url_for('static', path='Dashboard_code/js/jquery.cookie.js') }}" type="text/javascript"></script>
 <script>
   $(function () {
     'use strict'
 
-    var plot = $.plot('#flotChart', [{
-      data: flotSampleData3,
-      color: '#007bff',
-      lines: {
-        fillColor: { colors: [{ opacity: 0 }, { opacity: 0.2 }] }
-      }
-    }, {
-      data: flotSampleData4,
-      color: '#560bd0',
-      lines: {
-        fillColor: { colors: [{ opacity: 0 }, { opacity: 0.2 }] }
-      }
-    }], {
-      series: {
-        shadowSize: 0,
-        lines: {
-          show: true,
-          lineWidth: 2,
-          fill: true
-        }
-      },
-      grid: {
-        borderWidth: 0,
-        labelMargin: 8
-      },
-      yaxis: {
-        show: true,
-        min: 0,
-        max: 100,
-        ticks: [[0, ''], [20, '20K'], [40, '40K'], [60, '60K'], [80, '80K']],
-        tickColor: '#eee'
-      },
-      xaxis: {
-        show: true,
-        color: '#fff',
-        ticks: [[25, 'OCT 21'], [75, 'OCT 22'], [100, 'OCT 23'], [125, 'OCT 24']],
-      }
-    });
+      const plot = $.plot('#flotChart', [{
+          data: flotSampleData3,
+          color: '#007bff',
+          lines: {
+              fillColor: {colors: [{opacity: 0}, {opacity: 0.2}]}
+          }
+      }, {
+          data: flotSampleData4,
+          color: '#560bd0',
+          lines: {
+              fillColor: {colors: [{opacity: 0}, {opacity: 0.2}]}
+          }
+      }], {
+          series: {
+              shadowSize: 0,
+              lines: {
+                  show: true,
+                  lineWidth: 2,
+                  fill: true
+              }
+          },
+          grid: {
+              borderWidth: 0,
+              labelMargin: 8
+          },
+          yaxis: {
+              show: true,
+              min: 0,
+              max: 100,
+              ticks: [[0, ''], [20, '20K'], [40, '40K'], [60, '60K'], [80, '80K']],
+              tickColor: '#eee'
+          },
+          xaxis: {
+              show: true,
+              color: '#fff',
+              ticks: [[25, 'OCT 21'], [75, 'OCT 22'], [100, 'OCT 23'], [125, 'OCT 24']],
+          }
+      });
 
-    $.plot('#flotChart1', [{
+      $.plot('#flotChart1', [{
       data: dashData2,
       color: '#00cccc'
     }], {
@@ -122,7 +122,7 @@
     // Bar charts
     $('.peity-donut').peity('donut');
 
-    var ctx5 = document.getElementById('chartBar5').getContext('2d');
+    const ctx5 = document.getElementById('chartBar5').getContext('2d');
     new Chart(ctx5, {
       type: 'bar',
       data: {
@@ -170,7 +170,7 @@
       }
     });
     // Donut Chart
-    var datapie = {
+    const datapie = {
       labels: ['Commercial And Financial', 'Emergency And Public Services', 'Food And Drink', 'Other Amenities'],
       datasets: [{
         data: [2.4, 0.06, 31.5, 65.5],
@@ -178,7 +178,7 @@
       }]
     };
 
-    var optionpie = {
+    const optionpie = {
       maintainAspectRatio: false,
       responsive: true,
       legend: {
@@ -191,8 +191,8 @@
     };
 
     // For a doughnut chart
-    var ctxpie = document.getElementById('chartDonut');
-    var myPieChart6 = new Chart(ctxpie, {
+    const ctxpie = document.getElementById('chartDonut');
+    const myPieChart6 = new Chart(ctxpie, {
       type: 'doughnut',
       data: datapie,
       options: optionpie
@@ -200,13 +200,13 @@
 
   });
   // Pass lists from Jinja to JavaScript
-  var maintenance_months_list = {{ data_variables["maintenance_months_list"] | tojson }};
-  var maintenance_count_list = {{ data_variables["maintenance_count_list"] | tojson }};
-  var maintained_buildings_list = {{ data_variables["maintained_buildings_list"] | tojson }};
-  var max_value = {{ data_variables["max_value"] | int }};
+  const maintenance_months_list = {{ data_constiables["maintenance_months_list"] | tojson }};
+  const maintenance_count_list = {{ data_constiables["maintenance_count_list"] | tojson }};
+  const maintained_buildings_list = {{ data_constiables["maintained_buildings_list"] | tojson }};
+  const max_value = {{ data_constiables["max_value"] | int }};
 
-  var trending_rate = parseFloat({{ data_variables["trending_rate"] | tojson }});
-  var statusDiv = document.getElementById("trending_rate");
+  const trending_rate = parseFloat({{ data_constiables["trending_rate"] | tojson }});
+  const statusDiv = document.getElementById("trending_rate");
 
   // Set class based on trending_rate value
   if (trending_rate > 1) {
@@ -218,7 +218,7 @@
   }
 
   /* LINE CHART */
-  var ctx8 = document.getElementById('chartLine1');
+  const ctx8 = document.getElementById('chartLine1');
   new Chart(ctx8, {
     type: 'line',
     data: {
@@ -261,13 +261,13 @@
       }
     }
   });
-  var buildings_in_good_condition = {{ data_variables["buildings_in_good_condition"] | int }};
-  var total_maintenance_requests = {{ data_variables["total_maintenance_requests"] | int }};
-  var Buildings_count = {{ data_variables["Buildings_count"] | int }};
+  const buildings_in_good_condition = {{ data_constiables["buildings_in_good_condition"] | int }};
+  const total_maintenance_requests = {{ data_constiables["total_maintenance_requests"] | int }};
+  const Buildings_count = {{ data_constiables["Buildings_count"] | int }};
 
 
 
-  var ctx4 = document.getElementById('chartBar4').getContext('2d');
+  const ctx4 = document.getElementById('chartBar4').getContext('2d');
   new Chart(ctx4, {
     type: 'horizontalBar',
     data: {
@@ -305,14 +305,14 @@
   });
 
 
-  var categories_list = {{ data_variables["categories_list"] | tojson }};
-  var categories_percentage_list = {{ data_variables["categories_percentage_list"] | tojson }};
-  var background_colors = {{ data_variables["background_colors"] | tojson }};
+  const categories_list = {{ data_constiables["categories_list"] | tojson }};
+  const categories_percentage_list = {{ data_constiables["categories_percentage_list"] | tojson }};
+  const background_colors = {{ data_constiables["background_colors"] | tojson }};
 
 
 
 
-  var chartPie_amenities= {
+  const chartPie_amenities= {
     labels: categories_list,
     datasets: [{
       data: categories_percentage_list,
@@ -320,7 +320,7 @@
     }]
   };
 
-  var optionpie = {
+  const optionpie = {
     maintainAspectRatio: false,
     responsive: true,
     legend: {
@@ -334,8 +334,8 @@
 
 
   // For a doughnut chart
-  var ctx6 = document.getElementById('chartPie_amenities');
-  var myPieChart6 = new Chart(ctx6, {
+  const ctx6 = document.getElementById('chartPie_amenities');
+  const myPieChart6 = new Chart(ctx6, {
     type: 'doughnut',
     data: chartPie_amenities,
     options: optionpie

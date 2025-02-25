@@ -1,5 +1,9 @@
 .PHONY: run_web
 run_web:
+	poetry run python main.py web
+
+.PHONY: run_local_web
+run_local_web:
 	poetry run python main.py web --local true
 
 .PHONY: run_etl

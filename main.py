@@ -46,7 +46,7 @@ def main():
     """Main entry point for the application."""
     args = parse_arguments()
     app = create_app(settings)
-
+    print(args.local)
     if args.app == "web":
         logger.info("Starting the web app...")
         app.serve(args.local)
