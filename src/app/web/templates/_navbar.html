@@ -10,15 +10,15 @@
         <div class="collapse navbar-collapse" id="navbarCollapse">
             <div class="navbar-nav ms-auto py-0">
                 <a href="{{ url_for('home') }}"
-                    class="nav-item nav-link {% if request.path == url_for('home') %}active{% endif %}">Home</a>
+                   class="nav-item nav-link {% if request.path == url_for('home') %}active{% endif %}">Home</a>
                 <!-- <a href="{{ url_for('home') }}" class="nav-item nav-link">About</a> -->
-                <div class="nav-item dropdown {% if request.path == url_for('MapExplorer') or request.path == url_for('dashboard')or request.path == url_for('threedviewer')%}active{% endif %}">
+                <div class="nav-item dropdown {% if request.path == url_for('map_amenities_page') or request.path == url_for('dashboard')or request.path == url_for('map_maintenance_page')%}active{% endif %}">
                     <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Services</a>
                     <div class="dropdown-menu m-0">
                         {% for menu_item in [
-                        {"name": "Map Explorer", "route": "MapExplorer"},
-                        {"name": "Dashboard", "route": "dashboard"},
-                        {"name": "3D Viewer", "route": "threedviewer"}
+                        {"name": "Amenities Explorer", "route": "map_amenities_page"},
+                        {"name": "Maintenance Map", "route": "map_maintenance_page"},
+                        {"name": "Dashboard", "route": "dashboard"}
                         ] %}
                         <li class="nav-item {% if request.path == url_for(menu_item.route) %}active{% endif %}">
                             <a href="{{ url_for(menu_item.route) }}" class="dropdown-item">{{ menu_item.name }}</a>
@@ -27,7 +27,28 @@
                 </div>
                 <!-- <a href="{{ url_for('home') }}" class="nav-item nav-link">Contact</a> -->
             </div>
-            <a href="" class="btn btn-light rounded-pill text-primary py-2 px-4 ms-lg-5">log in</a>
+            <a href="#" class="btn btn-light rounded-pill text-primary py-2 px-4 ms-lg-5" id="user-link">{{ username
+                }}</a>
+
+            <script>
+                const userLink = document.getElementById('user-link');
+                const originalText = userLink.textContent;
+
+                userLink.addEventListener('mouseover', () => {
+                    userLink.textContent = 'Logout';
+                    userLink.classList.replace('text-primary', 'text-danger');
+                });
+
+                userLink.addEventListener('mouseout', () => {
+                    userLink.textContent = originalText;
+                    userLink.classList.replace('text-danger', 'text-primary');
+                });
+
+                userLink.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    window.location.href = "/logout";
+                });
+            </script>
         </div>
     </nav>
 </div>

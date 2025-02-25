@@ -2,8 +2,9 @@ import os
 import json
 from datetime import datetime
 
-from fastapi import APIRouter, Request
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Request, status
+from fastapi.params import Form
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 templates_dir = os.path.join(os.path.dirname(__file__), "templates")
@@ -17,9 +18,35 @@ web_router = APIRouter(prefix="")
 @web_router.get("/", response_class=HTMLResponse)
 @web_router.get("/home", response_class=HTMLResponse)
 async def home(request: Request):
+    name = request.session.get("name")
+    if not name:
+        return RedirectResponse(
+            request.url_for("login"), status_code=status.HTTP_302_FOUND
+        )  # Redirect to login if no name
     return templates.TemplateResponse(
-        "base.html", {"request": request, "title": "Home"}
+        "base.html", {"request": request, "title": "Home", "username": name}
+    )  # Pass name to template
+
+
+@web_router.get("/login", response_class=HTMLResponse)
+async def login(request: Request):
+    return templates.TemplateResponse(
+        "login.html", {"request": request, "title": "Login"}
     )
+
+
+@web_router.post("/login")
+async def login_submit(request: Request, name: str = Form(...)):
+    request.session["name"] = name
+    return RedirectResponse(
+        request.url_for("home"), status_code=status.HTTP_303_SEE_OTHER
+    )  # Use 303 for POST redirects
+
+
+@web_router.get("/logout")
+async def logout(request: Request):
+    request.session.clear()  # Clear the session
+    return RedirectResponse(request.url_for("login"))
 
 
 # Map Explorer Page

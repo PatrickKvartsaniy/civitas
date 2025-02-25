@@ -1,5 +1,3 @@
-{% if title == "home" %}
-
 <div class="container-xxl position-relative p-0">
     <div class="container-xxl bg-primary hero-header">
         <div class="container">
@@ -16,7 +14,7 @@
                         More</a>
                 </div>
                 <div class="col-lg-6 text-center text-lg-start">
-                    <img class="img-fluid animated zoomIn" src="{{ url_for('static', filename='img/hero.png') }}" alt="hero-img">
+                    <img class="img-fluid animated zoomIn" src="{{ url_for('static', path='img/hero.png') }}" alt="hero-img">
                 </div>
             </div>
         </div>
@@ -28,7 +26,7 @@
     <div class="container">
         <div class="row g-5 align-items-center">
             <div class="col-lg-6 wow zoomIn" data-wow-delay="0.1s">
-                <img class="img-fluid" src="{{ url_for('static', filename='img/about.png') }}">
+                <img class="img-fluid" src="{{ url_for('static', path='img/about.png') }}">
             </div>
             <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s">
                 <div class="d-inline-block border rounded-pill text-primary px-4 mb-3">About Us</div>
@@ -85,7 +83,7 @@
                 </div>
             </div>
             <div class="col-md-6 text-center mb-n5 d-none d-md-block">
-                <img class="img-fluid mt-5" style="max-height: 250px;" src="{{ url_for('static', filename='img/newsletter.png') }}">
+                <img class="img-fluid mt-5" style="max-height: 250px;" src="{{ url_for('static', path='img/newsletter.png') }}">
             </div>
         </div>
     </div>
@@ -107,7 +105,7 @@
                         <div class="service-icon">
                             <i class="fa fa-map fa-2x"></i>
                         </div>
-                        <a class="service-btn" href="{{ url_for('MapExplorer') }}" >
+                        <a class="service-btn" href="{{ url_for('map_explorer') }}" >
                             <i class="fa fa-link fa-2x" ></i>
                         </a>
                     </div>
@@ -144,7 +142,7 @@
                         <div class="service-icon">
                             <i class="fa fa-city fa-2x"></i>
                         </div>
-                        <a class="service-btn" href="{{ url_for('threedviewer') }}">
+                        <a class="service-btn" href="{{ url_for('threed_viewer') }}">
                             <i class="fa fa-link fa-2x"></i>
                         </a>
                     </div>
@@ -173,7 +171,7 @@
                 <div class="team-item">
                     <h5>Muhammad Sanan</h5>
                     <p class="mb-4">Geospatial Analyst</p>
-                    <img class="img-fluid rounded-circle w-75 mb-4" src="{{ url_for('static', filename='img/team-1.jpg') }}" alt="">
+                    <img class="img-fluid rounded-circle w-75 mb-4" src="{{ url_for('static', path='img/team-1.jpg') }}" alt="">
                     <div class="d-flex justify-content-center">
                         <a class="btn btn-square text-primary bg-white m-1" href=""><i
                                 class="fab fa-facebook-f"></i></a>
@@ -188,7 +186,7 @@
                 <div class="team-item">
                     <h5>Petro Kvartsianyi</h5>
                     <p class="mb-4">Software Engineer</p>
-                    <img class="img-fluid rounded-circle w-75 mb-4" src="{{ url_for('static', filename='img/team-2.jpg') }}" alt="">
+                    <img class="img-fluid rounded-circle w-75 mb-4" src="{{ url_for('static', path='img/team-2.jpg') }}" alt="">
                     <div class="d-flex justify-content-center">
                         <a class="btn btn-square text-primary bg-white m-1" href=""><i
                                 class="fab fa-facebook-f"></i></a>
@@ -203,7 +201,7 @@
                 <div class="team-item">
                     <h5>Hala Ghareeb</h5>
                     <p class="mb-4">GIS Solutions Engineer</p>
-                    <img class="img-fluid rounded-circle w-75 mb-4" src="{{ url_for('static', filename='img/team-3.jpg') }}" alt="">
+                    <img class="img-fluid rounded-circle w-75 mb-4" src="{{ url_for('static', path='img/team-3.jpg') }}" alt="">
                     <div class="d-flex justify-content-center">
                         <a class="btn btn-square text-primary bg-white m-1" href=""><i
                                 class="fab fa-facebook-f"></i></a>
@@ -217,13 +215,3 @@
         </div>
     </div>
 </div>
-
-{% else %}
-<div class="container-xxl position-relative p-0">
-    <div class="container-xxl bg-primary page-header">
-        <div class="container text-center">
-            <h1 class="text-white animated zoomIn mb-3">{{title}}</h1>
-        </div>
-    </div>
-</div>
-{% endif %}
