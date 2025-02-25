@@ -200,12 +200,12 @@
 
   });
   // Pass lists from Jinja to JavaScript
-  const maintenance_months_list = {{ data_constiables["maintenance_months_list"] | tojson }};
-  const maintenance_count_list = {{ data_constiables["maintenance_count_list"] | tojson }};
-  const maintained_buildings_list = {{ data_constiables["maintained_buildings_list"] | tojson }};
-  const max_value = {{ data_constiables["max_value"] | int }};
+  const maintenance_months_list = {{ data_variables["maintenance_months_list"] | tojson }};
+  const maintenance_count_list = {{ data_variables["maintenance_count_list"] | tojson }};
+  const maintained_buildings_list = {{ data_variables["maintained_buildings_list"] | tojson }};
+  const max_value = {{ data_variables["max_value"] | int }};
 
-  const trending_rate = parseFloat({{ data_constiables["trending_rate"] | tojson }});
+  const trending_rate = parseFloat({{ data_variables["trending_rate"] | tojson }});
   const statusDiv = document.getElementById("trending_rate");
 
   // Set class based on trending_rate value
@@ -261,9 +261,9 @@
       }
     }
   });
-  const buildings_in_good_condition = {{ data_constiables["buildings_in_good_condition"] | int }};
-  const total_maintenance_requests = {{ data_constiables["total_maintenance_requests"] | int }};
-  const Buildings_count = {{ data_constiables["Buildings_count"] | int }};
+  const buildings_in_good_condition = {{ data_variables["buildings_in_good_condition"] | int }};
+  const total_maintenance_requests = {{ data_variables["total_maintenance_requests"] | int }};
+  const buildings_count = {{ data_variables["buildings_count"] | int }};
 
 
 
@@ -297,7 +297,7 @@
           ticks: {
             beginAtZero:true,
             fontSize: 11,
-            max: Buildings_count
+            max: buildings_count
           }
         }]
       }
@@ -305,9 +305,9 @@
   });
 
 
-  const categories_list = {{ data_constiables["categories_list"] | tojson }};
-  const categories_percentage_list = {{ data_constiables["categories_percentage_list"] | tojson }};
-  const background_colors = {{ data_constiables["background_colors"] | tojson }};
+  const categories_list = {{ data_variables["categories_list"] | tojson }};
+  const categories_percentage_list = {{ data_variables["categories_percentage_list"] | tojson }};
+  const background_colors = {{ data_variables["background_colors"] | tojson }};
 
 
 

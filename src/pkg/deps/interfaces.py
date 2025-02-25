@@ -8,6 +8,7 @@ from src.pkg.models import (
     BuildingUpdate,
     AmenityUpdate,
     ClosestAmenityResponse,
+    InsightsResponse,
 )
 from src.pkg.models.enums import AmenityCategory
 
@@ -85,4 +86,8 @@ class ServiceInterface(ABC):
     async def get_closest_amenity(
         self, building_id: str, category: str
     ) -> Optional[ClosestAmenityResponse]:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_insights(self) -> InsightsResponse:
         raise NotImplementedError
