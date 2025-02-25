@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>{% block title %}{{ title }}{% endblock %}</title>
+    {%include '_head.html'%}
+</head>
+
+<body>
+    <div class="container-xxl bg-white p-0">
+        {%include '_spinner.html'%}
+        <!-- Navbar -->
+        {%include '_navbar.html'%}
+        {%include '_pageintro.html'%}
+        <!-- Page Content (Changes based on the route) -->
+        {% block content %}
+        <!-- This will be overridden by the different pages -->
+        {% endblock %}
+        <!-- Back to Top -->
+        <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+    </div>
+    <!-- JavaScript Libraries -->
+    {%include '_JSLibrary.html'%}
+</body>
+
+</html>

@@ -1,0 +1,73 @@
+<!-- row #1-->
+{{amenity_categories_counts_list}}
+<div class="row row-sm mg-b-20">
+
+  <!-- col #1 -->
+  <div class="col-lg-4">
+    <div class="card card-dashboard-pageviews">
+      <div class="card-header">
+        <h6 class="card-title">Types of amenities</h6>
+        <p class="card-text">Based on civitas database</p>
+      </div><!-- card-header -->
+      <div class="card-body">
+        {% for type in data_variables["amenity_types"] %}
+        <div class="az-list-item">
+          <div>
+            <h6>{{ type["amenity_type"] }}</h6>
+            <span>&nbsp;</span>
+          </div>
+          <div>
+            <h6 class="tx-primary">{{ type["count"] }} </h6>
+            <span>( {{ type["percentage"] }} %)</span>
+          </div>
+        </div><!-- list-group-item -->
+        {%endfor%}
+      </div><!-- card-body -->
+    </div><!-- card -->
+
+  </div>
+  <!-- col #1 end -->
+
+  <!-- col #2 -->
+  <div class="col-lg-8 mg-t-20 mg-lg-t-0">
+    <div class="card card-dashboard-four">
+      <div class="card-header">
+        <h6 class="card-title">Amenities by Categories</h6>
+      </div><!-- card-header -->
+      <div class="card-body row">
+        <div class="col-md-6 d-flex align-items-center">
+          <div class="chart">
+            <!-- Canvas tag is used in the graphics -->
+            <!-- <canvas id="chartDonut"></canvas> -->
+            <div class="chartjs-wrapper-demo mg-b-20 mg-md-b-0 mg-md-r-30 mg-xl-r-40"><canvas id="chartPie_amenities"></canvas></div>
+
+          </div>
+        </div><!-- col -->
+        <div class="col-md-6 col-lg-5 mg-lg-l-auto mg-t-20 mg-md-t-0">
+          {% for category in data_variables["amenity_categories"] %}
+          <div class="az-traffic-detail-item">
+            <div>
+              <span>{{category.category }}</span>
+              <span>{{category.count }} <span>({{category.percentage }}%)</span></span>
+            </div>
+            <!-- progress -->
+            <div class="progress">
+              <div class="progress-bar bg-purple" style="width: {{ category.percentage }}%"
+              role="progressbar" aria-valuenow="{{ category['percentage'] }}"
+              aria-valuemin="0" aria-valuemax="100" style="color: {{ category.bgcolor }};"></div>
+
+            </div><!-- progress -->
+
+          </div>
+          {%endfor%}
+
+        </div><!-- col -->
+
+      </div><!-- card-body -->
+    </div><!-- card-dashboard-four -->
+  </div>
+  <!-- col #2 end -->
+
+
+</div>
+<!-- row #1 end -->

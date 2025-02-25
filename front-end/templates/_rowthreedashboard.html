@@ -1,0 +1,87 @@
+    <!-- row #3 -->
+    <div class="row row-sm mg-b-20 mg-lg-b-0">
+        <div class="col-lg-5 col-xl-4">
+          <div class="row row-sm">
+            <div class="col-md-6 col-lg-12 mg-b-20 mg-md-b-0 mg-lg-b-20">
+              <div class="card card-dashboard-five">
+                <div class="card-header">
+                  <h6 class="card-title">Data Overview</h6>
+                  <span class="card-text">
+                    Having this data is essential for tracking urban development and improving public services in Malta.                  </span>
+                </div><!-- card-header -->
+                <div class="card-body row row-sm">
+                  <div class="col-6 d-sm-flex align-items-center">
+                    <div>
+                      <label>Buildings</label>
+                      <h4 style="color: #00B98E;">{{data_variables.Buildings_count}}</h4>
+                    </div>
+                  </div><!-- col -->
+                  <div class="col-6 d-sm-flex align-items-center">
+                    <div>
+                      <label>Amenities</label>
+                      <h4 style="color: #00B98E;">{{data_variables.amenities_count}}</h4>
+                    </div>
+                  </div><!-- col -->
+                </div><!-- card-body -->
+              </div><!-- card-dashboard-five -->
+
+            </div><!-- col -->
+            <div class="col-md-6 col-lg-12">
+              <div class="card card-dashboard-five">
+                <div class="card-header">
+                  <h6 class="card-title">Historical buildings</h6>
+                  <span class="card-text">Historic buildings require priority maintenance to preserve their cultural and structural integrity.
+                  </span>
+                </div><!-- card-header -->
+                <div class="card-body row row-sm">
+                  <div class="col-6 d-sm-flex align-items-center">
+                    <div>
+                      <label>Total buildings</label>
+                      <h4 style="color: #00B98E;">{{data_variables.historic_buildings_count}}</h4>
+                    </div>
+                  </div><!-- col -->
+                  <div class="col-6 d-sm-flex align-items-center">
+                    <div>
+                      <label>Requesting maintenance</label>
+                      <h4 style="color: #00B98E;">{{data_variables.historic_buildings_requires_maintenance_count}}</h4>
+                    </div>
+                  </div><!-- col -->
+                </div><!-- card-body -->
+              </div><!-- card-dashboard-five -->
+            </div><!-- col -->
+          </div>
+          <!-- row -->
+        </div>
+
+        <!-- col-lg-3 -->
+        <div class="col-lg-7 col-xl-8 mg-t-20 mg-lg-t-0">
+          <div class="card card-table-one">
+            <h6 class="card-title">Buildings information of the recent maintenance requests</h6>
+            <p class="az-content-text mg-b-20">sorting descending based on the request date</p>
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th class="wd-45p">ID</th>
+                    <th>Name(Address)</th>
+                    <th>Height</th>
+                    <th>updated_at</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for building in data_variables.latest_5_buildings%}
+                  <tr>
+                    <td><strong>{{building.osm_id}}</strong></td>
+                    <td>{{building.information.name}} {{building.information.address}}</td>
+                    <td>{{building.height}} m</td>
+                    <td>{{building.updated_at}}</td>
+                  </tr>
+                  {%endfor%}
+                </tbody>
+              </table>
+            </div><!-- table-responsive -->
+          </div><!-- card -->
+        </div><!-- col-lg -->
+
+      </div>
+      <!-- row #3 end -->

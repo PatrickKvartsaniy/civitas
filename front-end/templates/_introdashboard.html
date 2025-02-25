@@ -1,0 +1,24 @@
+<div class="az-dashboard-one-title">
+  <a href="{{ url_for('home') }}" >
+    <h1 class="m-0">Civitas</h1>
+</a>
+    <div style="text-align: left;">
+      <h2 class="az-dashboard-title" style="text-align: left;">Buildings Insights</h2>
+      <p class="az-dashboard-text" style="text-align: left;">Your web analytics dashboard.</p>
+    </div>
+    <div class="az-content-header-right">
+      <div class="media">
+        <div class="media-body">
+          <label>Last update</label>
+          <h6>{{today_date}}</h6>
+        </div><!-- media-body -->
+      </div><!-- media -->
+      <div class="media">
+        <div class="media-body">
+          <label>Updating Hour</label>
+          <h6>{{current_hour}}</h6>
+        </div><!-- media-body -->
+      </div><!-- media -->
+      <a  href="" class="btn" style="background-color: #05BA90; color: white;">Export</a>
+    </div>
+  </div>
